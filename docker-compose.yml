@@ -1,0 +1,20 @@
+# Uso opcional: caso queira rodar PostgreSQL localmente em vez do SQLite padrão.
+# 1. docker compose up -d
+# 2. Em prisma/schema.prisma, troque o provider do datasource para "postgresql"
+# 3. Em .env, use DATABASE_URL="postgresql://netfive:netfive@localhost:5432/netfive_cs?schema=public"
+# 4. npm run db:migrate
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: netfive
+      POSTGRES_PASSWORD: netfive
+      POSTGRES_DB: netfive_cs
+    ports:
+      - "5432:5432"
+    volumes:
+      - netfive_pg_data:/var/lib/postgresql/data
+
+volumes:
+  netfive_pg_data:

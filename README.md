@@ -1,0 +1,262 @@
+# Netfive Customer Success
+
+Plataforma interna para centralizar a gestão da carteira de clientes de Customer Success da Netfive: responsáveis, contratos, relacionamento, visitas, Health Score, planos de ação, oportunidades de expansão, segmentos e faturamento público — com sincronização de duas vias com Smartsheet e Pipedrive.
+
+## Sumário
+
+- [Requisitos](#requisitos)
+- [Instalação](#instalação)
+- [Configuração](#configuração)
+- [Banco de dados](#banco-de-dados)
+- [Autenticação](#autenticação)
+- [Integrações (Smartsheet / Pipedrive)](#integrações-smartsheet--pipedrive)
+- [Desenvolvimento](#desenvolvimento)
+- [Importação de dados](#importação-de-dados)
+- [Build e produção](#build-e-produção)
+- [Deploy](#deploy)
+- [Checklist de segurança](#checklist-de-segurança)
+- [Checklist manual de homologação](#checklist-manual-de-homologação)
+- [Arquitetura](#arquitetura)
+
+## Requisitos
+
+- Node.js 20+
+- npm 10+
+- SQLite (embutido, sem instalação — usado por padrão em desenvolvimento)
+- Opcional: Docker + Docker Compose, caso prefira rodar PostgreSQL localmente
+- Conta Smartsheet e/ou Pipedrive — opcional, só necessário se for usar a sincronização
+
+## Instalação
+
+```bash
+npm install
+cp .env.example .env
+```
+
+Edite `.env` e gere um `AUTH_SECRET` forte:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+## Configuração
+
+Variáveis de ambiente (ver `.env.example`):
+
+| Variável | Obrigatória | Descrição |
+|---|---|---|
+| `DATABASE_URL` | Sim | `file:./dev.db` (SQLite) por padrão; ou string de conexão PostgreSQL |
+| `AUTH_SECRET` | Sim | Segredo (≥16 caracteres) usado para derivar o hash do token de sessão |
+| `ALLOWED_EMAILS` | Sim | Lista de e-mails autorizados a acessar a plataforma, separados por vírgula |
+| `SMARTSHEET_API_TOKEN` / `SMARTSHEET_SHEET_ID` / `SMARTSHEET_WEBHOOK_SECRET` | Não | Necessárias apenas para ativar a sincronização com Smartsheet |
+| `PIPEDRIVE_API_TOKEN` / `PIPEDRIVE_DOMAIN` / `PIPEDRIVE_WEBHOOK_SECRET` | Não | Necessárias apenas para ativar a sincronização com Pipedrive |
+| `PUBLIC_APP_URL` | Não | URL pública usada ao registrar webhooks |
+
+## Banco de dados
+
+Por padrão a aplicação usa **SQLite** em desenvolvimento (`prisma/dev.db`), sem exigir Docker. Para produção, recomenda-se **PostgreSQL**:
+
+1. Em `prisma/schema.prisma`, troque `provider = "sqlite"` por `provider = "postgresql"` no bloco `datasource db`.
+2. Atualize `DATABASE_URL` para a string de conexão Postgres.
+3. Rode `npx prisma migrate deploy`.
+
+Comandos úteis:
+
+```bash
+npm run db:migrate   # cria/aplica migrations em desenvolvimento
+npm run db:deploy    # aplica migrations em produção (não gera novas)
+npm run db:seed      # popula o catálogo oficial de 32 serviços
+npm run db:studio    # abre o Prisma Studio para inspecionar os dados
+```
+
+As migrations nunca recriam a base do zero e nunca sobrescrevem dados de clientes já cadastrados — cada alteração de schema é incremental.
+
+Caso prefira rodar PostgreSQL localmente em vez do SQLite, um `docker-compose.yml` está incluído:
+
+```bash
+docker compose up -d
+```
+
+## Autenticação
+
+Login simplificado por lista de e-mails autorizados, **sem senha e sem código de verificação**:
+
+- O usuário digita o e-mail; se ele estiver em `ALLOWED_EMAILS`, a sessão é criada imediatamente.
+- Apenas o **hash** (HMAC-SHA256 com `AUTH_SECRET`) do token de sessão é armazenado — nunca o valor em claro.
+- Sessão válida por 48 horas, revogável via logout (remove o registro no banco).
+- Cookie de sessão: `HttpOnly`, `Secure`, `SameSite=Strict`.
+- Toda página protegida e toda rota de API validam a sessão no servidor; APIs retornam `401` quando a sessão é inválida/expirada.
+
+> **Trade-off de segurança**: como não há senha nem código, qualquer pessoa que souber (ou adivinhar) um e-mail da lista `ALLOWED_EMAILS` e tiver acesso à URL da plataforma consegue entrar. Isso foi uma escolha deliberada para simplificar o acesso da equipe — se em algum momento for necessário mais segurança, considere reintroduzir um segundo fator (código por e-mail, SSO corporativo, etc.).
+
+## Integrações (Smartsheet / Pipedrive)
+
+A plataforma sincroniza clientes em **duas vias** com Smartsheet e Pipedrive: alterações feitas na plataforma são enviadas para os dois sistemas, e alterações feitas neles chegam de volta via webhook.
+
+### Como funciona
+
+- **Mapeamento de campos**: definido em [`src/lib/integrations/field-mapping.ts`](src/lib/integrations/field-mapping.ts). A sincronização localiza colunas do Smartsheet pelo **título** e campos customizados do Pipedrive pelo **nome** — ajuste os nomes nesse arquivo para baterem exatamente com as colunas/campos das suas contas.
+- **Resolução de conflito**: última alteração vence, comparando o `updatedAt` do cliente local com o timestamp de modificação relatado pelo sistema externo. Se o dado local for mais recente, a alteração externa é descartada e o dado local é reenviado para corrigir o sistema externo.
+- **Prevenção de loop**: ao aplicar uma alteração vinda de um provedor, o dado só é propagado para o **outro** provedor (nunca de volta ao mesmo que originou a mudança).
+- **Exclusão**: excluir um cliente na plataforma remove apenas o vínculo interno (`ExternalLink`) — os registros no Smartsheet/Pipedrive **não são apagados automaticamente**, para evitar exclusão destrutiva em sistemas compartilhados sem confirmação explícita.
+- **Resiliência**: falhas de sincronização (rede, token inválido, coluna inexistente) são registradas em `SyncLog` e nunca bloqueiam o cadastro/edição do cliente na plataforma.
+
+### Configuração inicial
+
+**Smartsheet**
+
+1. Gere um token de API pessoal e o ID do sheet de destino.
+2. Preencha `SMARTSHEET_API_TOKEN` e `SMARTSHEET_SHEET_ID` no `.env`.
+3. Registre o webhook (uma vez, com o servidor publicamente acessível):
+   ```ts
+   import { registerWebhook } from "@/lib/integrations/smartsheet/client";
+   await registerWebhook(`${process.env.PUBLIC_APP_URL}/api/webhooks/smartsheet`);
+   ```
+   Guarde o `sharedSecret` retornado em `SMARTSHEET_WEBHOOK_SECRET`.
+
+**Pipedrive**
+
+1. Gere um token de API e identifique o domínio da conta (`PIPEDRIVE_DOMAIN`, o `suaempresa` de `suaempresa.pipedrive.com`).
+2. Defina um segredo próprio em `PIPEDRIVE_WEBHOOK_SECRET`.
+3. Cadastre um webhook em **Configurações > Ferramentas > Webhooks** apontando para `{PUBLIC_APP_URL}/api/webhooks/pipedrive`, com Basic Auth usuário `netfive` e senha igual a `PIPEDRIVE_WEBHOOK_SECRET`.
+
+Sem essas variáveis configuradas, a plataforma funciona normalmente — a sincronização fica apenas desativada (visível no card "Integrações" da Visão Geral).
+
+### Fallback manual
+
+Cada ficha de cliente tem um botão **"Sincronizar agora"** que reenvia manualmente aquele cliente para os dois sistemas, útil caso a sincronização automática tenha falhado.
+
+## Desenvolvimento
+
+```bash
+npm run dev          # servidor de desenvolvimento (http://localhost:3000)
+npm run lint          # ESLint
+npm run typecheck     # TypeScript em modo strict
+```
+
+Não há suite de testes automatizados neste projeto (removida a pedido do time). A validação de qualidade é feita via `lint` + `typecheck` + build + o checklist manual de homologação abaixo.
+
+## Importação de dados
+
+Script em `scripts/import-customers.ts`, aceita JSON, CSV ou XLSX:
+
+```bash
+npm run import:customers -- ./caminho/para/arquivo.xlsx
+```
+
+- As colunas de entrada devem usar os mesmos nomes definidos em `field-mapping.ts` (ex.: "Empresa", "CS Responsável", "Categoria", "Serviços Contratados"...).
+- Uma coluna `ID Legado` (ou `legacyId`) permite reimportações idempotentes, mapeando IDs de sistemas antigos para os UUIDs internos (mapa salvo em `scripts/import-legacy-id-map.json`).
+- Sem ID legado, o script casa pelo nome exato da empresa para evitar duplicação.
+- Nomes de serviços são normalizados (ex.: "Monitoramento de Credencias Vazadas" → "Monitoramento de Credenciais Vazadas") e serviços legados fora do catálogo oficial são preservados como serviços inativos.
+- Nunca apaga a base existente; gera um relatório (`scripts/import-report-<timestamp>.json`) com importados, atualizados e erros.
+
+## Build e produção
+
+```bash
+npm run build
+npm run start
+```
+
+## Deploy
+
+1. Provisione um banco PostgreSQL (recomendado em produção) e configure `DATABASE_URL`.
+2. Configure todas as variáveis de ambiente obrigatórias (ver [Configuração](#configuração)).
+3. Rode `npx prisma migrate deploy` e `npm run db:seed`.
+4. Rode `npm run build` e sirva com `npm run start` (ou a plataforma de sua preferência com suporte a Next.js — Vercel, Docker, etc.).
+5. Garanta HTTPS em produção (o cookie de sessão é `Secure`).
+6. Se for usar Smartsheet/Pipedrive, registre os webhooks apontando para a URL pública final.
+
+## Checklist de segurança
+
+- [x] Login restrito à lista de e-mails em `ALLOWED_EMAILS`.
+- [x] Apenas o hash (HMAC-SHA256) do token de sessão é persistido — nunca o valor em claro.
+- [x] Cookie de sessão `HttpOnly`, `Secure`, `SameSite=Strict`; sessão expira em 48h.
+- [ ] **Risco aceito conscientemente**: não há senha nem segundo fator no login — qualquer um com um e-mail da lista e acesso à URL entra direto (ver [Autenticação](#autenticação)).
+- [x] Toda rota de API valida a sessão no servidor (`requireSessionEmail`) e retorna `401` quando inválida/expirada.
+- [x] Validação de payload com Zod em todas as rotas de escrita (client e servidor — nunca confia apenas na validação do navegador).
+- [x] Defesa em profundidade contra CSRF (checagem de origem em rotas de escrita, além do `SameSite=Strict`).
+- [x] Webhooks externos autenticados: assinatura HMAC (Smartsheet) e Basic Auth (Pipedrive).
+- [x] Exclusão de cliente executada em transação, removendo também vínculos de serviços e observações.
+- [x] Logs de auditoria (`AuditLog`) para criação, edição e exclusão de clientes, e criação de observações.
+- [x] Nenhuma chave/segredo hardcoded no código — tudo via variáveis de ambiente (`.env`, nunca commitado).
+- [x] `.env` e artefatos gerados (banco SQLite, relatórios de importação) estão no `.gitignore`.
+- [x] Erros internos nunca expõem detalhes sensíveis nas respostas de API (mensagens padronizadas + log no servidor).
+- [ ] **Ação manual antes de produção**: gerar um `AUTH_SECRET` novo e forte (não usar o de desenvolvimento).
+- [ ] **Ação manual antes de produção**: confirmar HTTPS ativo (cookies `Secure` exigem contexto seguro fora de `localhost`).
+
+## Checklist manual de homologação
+
+### Autenticação
+- [ ] Login com e-mail da lista `ALLOWED_EMAILS` entra direto, sem código.
+- [ ] Login com e-mail fora da lista é rejeitado com mensagem genérica.
+- [ ] Login redireciona para `/dashboard` (ou `redirectTo`) e a sessão persiste ao navegar entre páginas.
+- [ ] Logout invalida a sessão e acessar uma rota protegida depois redireciona para `/login`.
+- [ ] Após 48h, a sessão expira e a próxima ação exige novo login.
+
+### Visão geral
+- [ ] Busca por empresa/serviço filtra a tabela corretamente.
+- [ ] Filtros de CS, categoria e status atualizam a tabela.
+- [ ] Alternar "KPIs acompanham os filtros" recalcula os KPIs.
+- [ ] Ordenação por coluna e paginação funcionam.
+- [ ] Estados de carregamento, vazio e erro (com nova tentativa) aparecem corretamente.
+
+### Visitas
+- [ ] Somente visitas a partir de hoje aparecem, ordenadas da mais próxima.
+- [ ] Filtro por CS recalcula KPIs e agenda.
+- [ ] Card do dia atual mostra "Hoje".
+- [ ] Clicar em um card abre a ficha do cliente correspondente.
+
+### Clientes
+- [ ] KPIs (total, com segmento, receita pública, verificados, média) recalculam com os filtros.
+- [ ] Gráfico de segmentos soma 100% incluindo "Não informado".
+- [ ] Gráfico financeiro considera apenas o ano fiscal correto (ano corrente − 1) e mostra "—" para quem não tem valor no período.
+- [ ] Abrir a ficha funciona por clique e por Enter (teclado).
+
+### Estatísticas
+- [ ] Filtro por CS recalcula todos os KPIs e painéis.
+- [ ] Painel de sem-contato mostra no máximo 10, ordenado por mais dias sem contato.
+- [ ] Painel de sem-visita mostra "nunca" para quem nunca foi visitado.
+- [ ] Contatos planejados em atraso aparecem corretamente ordenados.
+
+### Ficha do cliente
+- [ ] Todas as seções exibem os dados corretos; campos vazios mostram "—".
+- [ ] Barra de Health Score reflete o valor e a cor do status.
+- [ ] Links de evidências abrem em nova aba com `rel="noopener noreferrer"`.
+- [ ] Adicionar observação aparece imediatamente no topo da timeline, com autor e data/hora.
+- [ ] Editar preserva os serviços já marcados e atualiza `updatedAt`.
+- [ ] Excluir exige digitar o nome exato da empresa, mostra erro se falhar, e atualiza os indicadores após sucesso.
+- [ ] Botão "Sincronizar agora" dispara a sincronização manual sem erros (mesmo com integrações desativadas).
+
+### Geral
+- [ ] Interface 100% em português, datas em `DD/MM/AAAA`, valores em `R$` (pt-BR).
+- [ ] Layout responsivo em desktop, tablet e celular.
+- [ ] Navegação por teclado (Tab/Enter) funciona nos elementos interativos principais.
+- [ ] Nenhum erro no console do navegador durante o uso normal.
+
+## Arquitetura
+
+```
+src/
+  app/                     Rotas (App Router) — páginas e API routes
+    (protected)/           Layout protegido + páginas: dashboard, visitas, clientes, estatisticas
+    api/                   Rotas de API (auth, customers, services, integrations, webhooks)
+    login/                 Página de login
+  components/              Componentes de UI, organizados por domínio
+  lib/
+    auth/                  Autenticação: lista de e-mails permitidos, sessão, criptografia
+    api/                   Erros padronizados de API, checagem de origem
+    repositories/          Acesso a dados via Prisma (única camada que fala com o banco)
+    services/              Regras de negócio e cálculos (KPIs, ano fiscal, análises)
+    integrations/           Clientes Smartsheet/Pipedrive, mapeamento de campos, orquestração de sync
+    validations/           Schemas Zod (entrada de API e formulários)
+    hooks/                 Hooks React reutilizáveis (dados, debounce, drawer de cliente)
+    contexts/              Contextos React (refresh de dados entre componentes client-side)
+prisma/
+  schema.prisma            Modelos e índices
+  migrations/              Histórico de migrations
+  seed.ts                  Seed do catálogo de serviços
+scripts/
+  import-customers.ts      Importação de clientes existentes (JSON/CSV/XLSX)
+```
+
+Camadas claramente separadas: **rotas de API** validam sessão e payload, delegam para **services** (regra de negócio + auditoria), que usam **repositories** (única camada com acesso ao Prisma). A UI nunca acessa o banco diretamente — sempre via `fetch` para as rotas de API.

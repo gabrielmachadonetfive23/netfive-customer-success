@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  background-color: #0a0a0b;
+  color: #f4f4f5;
+}
+
+* {
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  scrollbar-width: thin;
+}
+
+@layer components {
+  .glass-panel {
+    @apply bg-netfive-surface/70 backdrop-blur-glass border border-netfive-border rounded-xl2 shadow-glass;
+  }
+
+  .glass-card {
+    @apply bg-white/[0.03] backdrop-blur-glass border border-netfive-border rounded-xl2 shadow-glass-sm;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-netfive-red px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-netfive-red-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-netfive-red disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-netfive-border bg-white/5 px-4 py-2 text-sm font-medium text-netfive-gray-100 transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/40 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-netfive-red px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-netfive-red-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-netfive-red disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .input-field {
+    @apply w-full rounded-lg border border-netfive-border bg-white/5 px-3 py-2 text-sm text-netfive-gray-100 placeholder:text-netfive-gray-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-netfive-red;
+  }
+
+  .field-label {
+    @apply mb-1 block text-xs font-medium text-netfive-gray-500;
+  }
+
+  .field-error {
+    @apply mt-1 text-xs text-netfive-red;
+  }
+}

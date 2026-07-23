@@ -1,0 +1,183 @@
+// Netfive Customer Success — Prisma schema
+// Provider padrão de desenvolvimento: SQLite (sem dependência de Docker).
+// Para produção com PostgreSQL, troque provider = "sqlite" por "postgresql"
+// e aponte DATABASE_URL para a instância Postgres. O restante do schema
+// e todas as regras de negócio permanecem compatíveis com ambos.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Autenticação
+// ---------------------------------------------------------------------------
+
+model UserSession {
+  id        String   @id @default(uuid())
+  email     String
+  tokenHash String   @unique
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([email])
+  @@index([expiresAt])
+}
+
+// ---------------------------------------------------------------------------
+// Domínio de Customer Success
+// ---------------------------------------------------------------------------
+
+model Customer {
+  id String @id @default(uuid())
+
+  companyName String
+  csOwner     String
+  category    String // AA | A | B | C | D | E
+
+  segment             String?
+  segmentSourceTitle   String?
+  segmentSourceUrl     String?
+  segmentVerifiedAt    DateTime?
+
+  contactName  String?
+  contactRole  String?
+  contactInfo  String? // telefone e/ou e-mail do contato principal
+  technicalOwner String?
+
+  startDate   DateTime?
+  renewalDate DateTime?
+
+  healthScore  Int? // 0-100, nulo = "Não avaliado"
+  healthStatus String @default("Não avaliado") // Saudável | Atenção | Crítico | Não avaliado
+  healthReason String?
+  attentionPoints String?
+  actionPlan      String?
+
+  lastContact DateTime?
+  nextContact DateTime?
+  lastVisit   DateTime?
+  nextVisit   DateTime?
+
+  needs              String?
+  currentPerception  String?
+  expansionPlan      String?
+  growthEstimate     String?
+  opportunities      String?
+  expansionNextStep  String?
+
+  annualRevenue Float? // nulo quando não há dado público, nunca zero
+  fiscalYear    Int?
+  revenueMetric String? // ex.: faturamento | receita bruta | receita líquida
+  revenuePeriod String? // ex.: exercício fiscal, ano civil
+  revenueSourceTitle  String?
+  revenueSourceUrl    String?
+  revenueVerifiedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  services      CustomerService[]
+  observations  Observation[]
+  externalLinks ExternalLink[]
+
+  @@index([companyName])
+  @@index([csOwner])
+  @@index([category])
+  @@index([segment])
+  @@index([healthStatus])
+  @@index([nextContact])
+  @@index([nextVisit])
+  @@index([lastContact])
+  @@index([lastVisit])
+  @@index([fiscalYear])
+}
+
+model Service {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  customers CustomerService[]
+
+  @@index([active])
+}
+
+model CustomerService {
+  customerId String
+  serviceId  String
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  service  Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@id([customerId, serviceId])
+  @@index([serviceId])
+}
+
+model Observation {
+  id         String   @id @default(uuid())
+  customerId String
+  text       String
+  author     String
+  createdAt  DateTime @default(now())
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId])
+  @@index([createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Auditoria
+// ---------------------------------------------------------------------------
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  action     String // customer.create | customer.update | customer.delete | observation.create
+  entityId   String
+  actor      String
+  detail     String?
+  createdAt  DateTime @default(now())
+
+  @@index([entityId])
+  @@index([action])
+}
+
+// ---------------------------------------------------------------------------
+// Integrações externas (Smartsheet / Pipedrive) — sincronização de duas vias
+// ---------------------------------------------------------------------------
+
+model ExternalLink {
+  id                String   @id @default(uuid())
+  customerId        String
+  provider          String // "smartsheet" | "pipedrive"
+  externalId        String // ID da linha (Smartsheet) ou do negócio/organização (Pipedrive)
+  externalUpdatedAt DateTime? // timestamp de última modificação reportado pelo sistema externo
+  lastSyncedAt      DateTime  @default(now())
+  lastSyncDirection String // "push" | "pull"
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, externalId])
+  @@unique([customerId, provider])
+  @@index([customerId])
+}
+
+model SyncLog {
+  id         String   @id @default(uuid())
+  provider   String // "smartsheet" | "pipedrive"
+  direction  String // "push" | "pull"
+  customerId String?
+  status     String // "success" | "error" | "skipped"
+  message    String?
+  createdAt  DateTime @default(now())
+
+  @@index([provider])
+  @@index([customerId])
+  @@index([createdAt])
+}
