@@ -4,7 +4,6 @@ import { ALLOWED_CATEGORIES, DEFAULT_HEALTH_STATUS, HEALTH_STATUSES, normalizeSe
 import * as smartsheetClient from "@/lib/integrations/smartsheet/client";
 import * as smartsheetMapper from "@/lib/integrations/smartsheet/mapper";
 import * as pipedriveClient from "@/lib/integrations/pipedrive/client";
-import * as pipedriveMapper from "@/lib/integrations/pipedrive/mapper";
 import type { SyncProvider } from "@/lib/integrations/types";
 import { findCustomerDetailById } from "@/lib/repositories/customer-repository";
 
@@ -70,29 +69,30 @@ async function pushToProvider(customer: CustomerDTO, provider: SyncProvider): Pr
     return;
   }
 
+  if (provider === "pipedrive") {
+    // O Pipedrive é somente leitura por design: os clientes são vinculados a
+    // Organizações já existentes (reais, com histórico de negócios), então
+    // nunca escrevemos dados nossos por cima delas — isso sobrescreveria
+    // informações reais de CRM (ex.: o nome oficial da empresa). A ficha do
+    // cliente só consome os negócios (deals) dessa organização.
+    await logSync({ provider, direction: "push", customerId: customer.id, status: "skipped", message: "Pipedrive é somente leitura — não sobrescrevemos organizações existentes." });
+    return;
+  }
+
   try {
     const link = await prisma.externalLink.findUnique({
       where: { customerId_provider: { customerId: customer.id, provider } },
     });
 
     let externalId = link?.externalId;
-    let externalUpdatedAt: Date;
 
-    if (provider === "smartsheet") {
-      const cells = await smartsheetMapper.customerToSmartsheetCells(customer);
-      const row = externalId
-        ? await smartsheetClient.updateRow(externalId, cells)
-        : await smartsheetClient.createRow(cells);
-      externalId = String(row.id);
-      externalUpdatedAt = new Date(row.modifiedAt);
-    } else {
-      const fields = await pipedriveMapper.customerToPipedriveFields(customer);
-      const organization = externalId
-        ? await pipedriveClient.updateOrganization(externalId, fields)
-        : await pipedriveClient.createOrganization(fields);
-      externalId = String(organization.id);
-      externalUpdatedAt = new Date(organization.update_time);
-    }
+    // Só resta o Smartsheet aqui: o push para o Pipedrive retorna antes (somente leitura).
+    const cells = await smartsheetMapper.customerToSmartsheetCells(customer);
+    const row = externalId
+      ? await smartsheetClient.updateRow(externalId, cells)
+      : await smartsheetClient.createRow(cells);
+    externalId = String(row.id);
+    const externalUpdatedAt = new Date(row.modifiedAt);
 
     await prisma.externalLink.upsert({
       where: { customerId_provider: { customerId: customer.id, provider } },
@@ -122,6 +122,77 @@ async function pushToProvider(customer: CustomerDTO, provider: SyncProvider): Pr
 export async function pushCustomerToAllProviders(customer: CustomerDTO, skip?: SyncProvider): Promise<void> {
   const providers: SyncProvider[] = (["smartsheet", "pipedrive"] as const).filter((p) => p !== skip);
   await Promise.all(providers.map((provider) => pushToProvider(customer, provider)));
+}
+
+function normalizeCompanyName(name: string): string {
+  return name
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * Tenta vincular automaticamente um cliente a uma organização já existente no
+ * Pipedrive, por nome — nunca cria uma organização nova (o Pipedrive é
+ * somente leitura aqui, ver pushToProvider). Só vincula quando exatamente uma
+ * organização corresponde com confiança; casos ambíguos ou sem resultado
+ * ficam sem vínculo (revisão manual depois) e são registrados em SyncLog.
+ */
+export async function tryLinkPipedriveOrganization(customerId: string, companyName: string): Promise<void> {
+  if (!integrationsEnabled("pipedrive")) return;
+
+  const existing = await prisma.externalLink.findUnique({
+    where: { customerId_provider: { customerId, provider: "pipedrive" } },
+  });
+  if (existing) return;
+
+  try {
+    const results = await pipedriveClient.searchOrganizationsByName(companyName);
+    const normCustomer = normalizeCompanyName(companyName);
+    const matches = results.filter((r) => {
+      const normOrg = normalizeCompanyName(r.name);
+      return normCustomer.length >= 3 && (normOrg.includes(normCustomer) || normCustomer.includes(normOrg));
+    });
+
+    if (matches.length !== 1) {
+      await logSync({
+        provider: "pipedrive",
+        direction: "pull",
+        customerId,
+        status: "skipped",
+        message:
+          matches.length === 0
+            ? "Nenhuma organização correspondente encontrada no Pipedrive."
+            : `${matches.length} organizações correspondentes — vínculo requer revisão manual.`,
+      });
+      return;
+    }
+
+    const [match] = matches;
+    if (!match) return;
+
+    await prisma.externalLink.create({
+      data: { customerId, provider: "pipedrive", externalId: String(match.id), lastSyncDirection: "pull" },
+    });
+    await logSync({
+      provider: "pipedrive",
+      direction: "pull",
+      customerId,
+      status: "success",
+      message: `Vinculado automaticamente a "${match.name}" (#${match.id}).`,
+    });
+  } catch (error) {
+    await logSync({
+      provider: "pipedrive",
+      direction: "pull",
+      customerId,
+      status: "error",
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
 }
 
 function coerceCategory(value: unknown): CustomerDTO["category"] | undefined {

@@ -67,29 +67,6 @@ export async function getOrganizationFields(): Promise<PipedriveOrganizationFiel
   return fields;
 }
 
-export async function getOrganization(id: string): Promise<PipedriveOrganization> {
-  return pipedriveRequest<PipedriveOrganization>(`/organizations/${id}`);
-}
-
-export async function createOrganization(
-  fields: Record<string, string | number | null>,
-): Promise<PipedriveOrganization> {
-  return pipedriveRequest<PipedriveOrganization>("/organizations", {
-    method: "POST",
-    body: JSON.stringify(fields),
-  });
-}
-
-export async function updateOrganization(
-  id: string,
-  fields: Record<string, string | number | null>,
-): Promise<PipedriveOrganization> {
-  return pipedriveRequest<PipedriveOrganization>(`/organizations/${id}`, {
-    method: "PUT",
-    body: JSON.stringify(fields),
-  });
-}
-
 /** Negócios (deals) associados a uma organização, mais recentes primeiro. */
 export async function listOrganizationDeals(organizationId: string): Promise<PipedriveDeal[]> {
   const deals = await pipedriveRequest<PipedriveDeal[] | null>(

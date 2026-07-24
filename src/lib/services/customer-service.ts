@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import * as customerRepository from "@/lib/repositories/customer-repository";
 import * as observationRepository from "@/lib/repositories/observation-repository";
 import { recordAuditLog } from "@/lib/repositories/audit-repository";
-import { pushCustomerToAllProviders } from "@/lib/integrations/sync-orchestrator";
+import { pushCustomerToAllProviders, tryLinkPipedriveOrganization } from "@/lib/integrations/sync-orchestrator";
 import type { CustomerInput } from "@/lib/validations/customer";
 import type { ObservationInput } from "@/lib/validations/observation";
 
@@ -14,6 +14,7 @@ export async function createCustomer(input: CustomerInput, actor: string) {
     actor,
     detail: `Empresa: ${customer.companyName}`,
   });
+  await tryLinkPipedriveOrganization(customer.id, customer.companyName);
   await pushCustomerToAllProviders(customer);
   return customer;
 }
