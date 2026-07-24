@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api-client";
 import { formatDateTime } from "@/lib/format";
+import { useDataRefresh } from "@/lib/contexts/DataRefreshContext";
 
 interface ProviderStatus {
   provider: "smartsheet" | "pipedrive";
@@ -19,12 +20,13 @@ const PROVIDER_LABELS: Record<ProviderStatus["provider"], string> = {
 
 export function IntegrationsStatusCard() {
   const [status, setStatus] = useState<ProviderStatus[] | null>(null);
+  const { version } = useDataRefresh();
 
   useEffect(() => {
     apiFetch<ProviderStatus[]>("/api/integrations/status")
       .then(setStatus)
       .catch(() => setStatus([]));
-  }, []);
+  }, [version]);
 
   if (!status) return null;
 
