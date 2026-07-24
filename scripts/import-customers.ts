@@ -23,7 +23,7 @@ import { parse as parseCsv } from "csv-parse/sync";
 import * as XLSX from "xlsx";
 import { PrismaClient } from "@prisma/client";
 import { ALLOWED_CATEGORIES, normalizeServiceName } from "../src/lib/constants";
-import { SYNC_FIELDS } from "../src/lib/integrations/field-mapping";
+import { PIPEDRIVE_SYNC_FIELDS as SYNC_FIELDS } from "../src/lib/integrations/field-mapping";
 
 const prisma = new PrismaClient();
 const LEGACY_MAP_PATH = resolve(__dirname, "import-legacy-id-map.json");

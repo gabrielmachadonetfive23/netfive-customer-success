@@ -1,8 +1,8 @@
 import type { CustomerDTO } from "@/lib/types";
-import { SYNC_FIELDS } from "@/lib/integrations/field-mapping";
+import { PIPEDRIVE_SYNC_FIELDS } from "@/lib/integrations/field-mapping";
 import { getOrganizationFields, type PipedriveOrganization } from "@/lib/integrations/pipedrive/client";
 
-function toFieldValue(customer: CustomerDTO, key: (typeof SYNC_FIELDS)[number]["key"]): string | number | null {
+function toFieldValue(customer: CustomerDTO, key: (typeof PIPEDRIVE_SYNC_FIELDS)[number]["key"]): string | number | null {
   if (key === "services") {
     return customer.services.map((s) => s.name).join(", ");
   }
@@ -20,7 +20,7 @@ export async function customerToPipedriveFields(
 
   const fields: Record<string, string | number | null> = { name: customer.companyName };
 
-  for (const field of SYNC_FIELDS) {
+  for (const field of PIPEDRIVE_SYNC_FIELDS) {
     if (field.key === "companyName") continue; // já mapeado para o campo padrão "name"
     const fieldKey = keyByName.get(field.externalName);
     if (!fieldKey) continue; // campo customizado ainda não existe na conta Pipedrive — ignora silenciosamente
@@ -36,7 +36,7 @@ export async function pipedriveOrganizationToFieldValues(
 ): Promise<Partial<Record<string, string | number | null>>> {
   const customFields = await getOrganizationFields();
   const nameByKey = new Map(customFields.map((f) => [f.key, f.name]));
-  const fieldByExternalName = new Map(SYNC_FIELDS.map((f) => [f.externalName, f]));
+  const fieldByExternalName = new Map(PIPEDRIVE_SYNC_FIELDS.map((f) => [f.externalName, f]));
 
   const values: Record<string, string | number | null> = {
     companyName: (organization.name as string) ?? null,

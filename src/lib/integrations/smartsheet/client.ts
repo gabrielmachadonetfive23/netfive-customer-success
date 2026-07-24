@@ -5,12 +5,20 @@ const SMARTSHEET_API_BASE = "https://api.smartsheet.com/2.0";
 export interface SmartsheetColumn {
   id: number;
   title: string;
+  type: string;
+  options?: string[];
 }
 
 export interface SmartsheetCell {
   columnId: number;
   value?: string | number | boolean | null;
   displayValue?: string | null;
+  /**
+   * Colunas do tipo MULTI_PICKLIST (seleção múltipla) rejeitam `value` puro
+   * com CELL_VALUE_FAILS_VALIDATION — exigem objectValue com a lista de
+   * valores selecionados.
+   */
+  objectValue?: { objectType: "MULTI_PICKLIST"; values: string[] };
 }
 
 export interface SmartsheetRow {

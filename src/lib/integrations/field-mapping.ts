@@ -7,20 +7,49 @@ export interface SyncFieldDefinition {
   key: keyof CustomerDTO | "services";
   kind: SyncFieldKind;
   /**
-   * Nome usado para localizar a coluna no Smartsheet (título da coluna) e o
+   * Nome usado para localizar a coluna no Smartsheet (título da coluna) ou o
    * campo customizado no Pipedrive (nome do campo em Configurações > Campos).
-   * AJUSTE ESTES NOMES para bater exatamente com o que existe nas suas contas
-   * de Smartsheet e Pipedrive — a sincronização localiza colunas/campos pelo
-   * nome, não por ID, então basta manter os nomes idênticos dos dois lados.
+   * A sincronização localiza colunas/campos pelo nome, não por ID.
    */
   externalName: string;
 }
 
 /**
- * Mapeamento editável entre os campos do cliente e as colunas/campos externos.
- * Observações (histórico) e identificadores internos não são sincronizados.
+ * Mapeamento para a planilha Smartsheet "Controle Expansão da Base
+ * (Up-Sell/Cross-Sell)" (sheet ID configurado em SMARTSHEET_SHEET_ID).
+ * Os nomes abaixo batem exatamente com os títulos reais das colunas dessa
+ * planilha (alguns têm espaço no final — não remova).
+ *
+ * Campos do cliente sem coluna correspondente nessa planilha (segmento,
+ * contato, faturamento, datas de início/renovação, responsável técnico)
+ * simplesmente não são sincronizados com o Smartsheet.
+ *
+ * A coluna "Observações" da planilha não é sincronizada: ela é um único
+ * campo de texto, enquanto na plataforma observações são um histórico
+ * (lista) por cliente — os dois modelos não são compatíveis 1:1.
  */
-export const SYNC_FIELDS: readonly SyncFieldDefinition[] = [
+export const SMARTSHEET_SYNC_FIELDS: readonly SyncFieldDefinition[] = [
+  { key: "companyName", kind: "text", externalName: "Cliente" },
+  { key: "csOwner", kind: "text", externalName: "CS" },
+  { key: "category", kind: "text", externalName: "Categoria" },
+  { key: "services", kind: "services", externalName: "Escopo Contratado" },
+  { key: "healthScore", kind: "number", externalName: "Health Score" },
+  { key: "expansionPlan", kind: "text", externalName: "Plano de Expansão (lista serviço/produto)" },
+  { key: "growthEstimate", kind: "text", externalName: "Estimativa de Crescimento $$" },
+  { key: "actionPlan", kind: "text", externalName: "Plano de Ação do Ano" },
+  { key: "lastContact", kind: "date", externalName: "Último Contato " },
+  { key: "nextContact", kind: "date", externalName: "Próximo Contato" },
+  { key: "lastVisit", kind: "date", externalName: "Última Visita " },
+  { key: "nextVisit", kind: "date", externalName: "Próxima Visita " },
+] as const;
+
+/**
+ * Mapeamento para os campos customizados de Organização no Pipedrive.
+ * Ainda não configurado com nomes reais — ajuste os `externalName` abaixo
+ * para baterem exatamente com os campos criados em Configurações > Campos
+ * quando a integração Pipedrive for ativada.
+ */
+export const PIPEDRIVE_SYNC_FIELDS: readonly SyncFieldDefinition[] = [
   { key: "companyName", kind: "text", externalName: "Empresa" },
   { key: "csOwner", kind: "text", externalName: "CS Responsável" },
   { key: "category", kind: "text", externalName: "Categoria" },
