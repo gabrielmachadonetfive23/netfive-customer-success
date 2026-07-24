@@ -1,71 +1,66 @@
 -- CreateTable
 CREATE TABLE "UserSession" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "tokenHash" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "expiresAt" DATETIME NOT NULL
-);
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
 
--- CreateTable
-CREATE TABLE "AuthenticationCode" (
-    "id" TEXT NOT NULL PRIMARY KEY,
-    "email" TEXT NOT NULL,
-    "codeHash" TEXT NOT NULL,
-    "attempts" INTEGER NOT NULL DEFAULT 0,
-    "requestedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "expiresAt" DATETIME NOT NULL,
-    "usedAt" DATETIME
+    CONSTRAINT "UserSession_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "Customer" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "companyName" TEXT NOT NULL,
     "csOwner" TEXT NOT NULL,
     "category" TEXT NOT NULL,
     "segment" TEXT,
     "segmentSourceTitle" TEXT,
     "segmentSourceUrl" TEXT,
-    "segmentVerifiedAt" DATETIME,
+    "segmentVerifiedAt" TIMESTAMP(3),
     "contactName" TEXT,
     "contactRole" TEXT,
     "contactInfo" TEXT,
     "technicalOwner" TEXT,
-    "startDate" DATETIME,
-    "renewalDate" DATETIME,
+    "startDate" TIMESTAMP(3),
+    "renewalDate" TIMESTAMP(3),
     "healthScore" INTEGER,
     "healthStatus" TEXT NOT NULL DEFAULT 'Não avaliado',
     "healthReason" TEXT,
     "attentionPoints" TEXT,
     "actionPlan" TEXT,
-    "lastContact" DATETIME,
-    "nextContact" DATETIME,
-    "lastVisit" DATETIME,
-    "nextVisit" DATETIME,
+    "lastContact" TIMESTAMP(3),
+    "nextContact" TIMESTAMP(3),
+    "lastVisit" TIMESTAMP(3),
+    "nextVisit" TIMESTAMP(3),
     "needs" TEXT,
     "currentPerception" TEXT,
     "expansionPlan" TEXT,
     "growthEstimate" TEXT,
     "opportunities" TEXT,
     "expansionNextStep" TEXT,
-    "annualRevenue" REAL,
+    "annualRevenue" DOUBLE PRECISION,
     "fiscalYear" INTEGER,
     "revenueMetric" TEXT,
     "revenuePeriod" TEXT,
     "revenueSourceTitle" TEXT,
     "revenueSourceUrl" TEXT,
-    "revenueVerifiedAt" DATETIME,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL
+    "revenueVerifiedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Customer_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "Service" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "active" BOOLEAN NOT NULL DEFAULT true,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Service_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -73,52 +68,56 @@ CREATE TABLE "CustomerService" (
     "customerId" TEXT NOT NULL,
     "serviceId" TEXT NOT NULL,
 
-    PRIMARY KEY ("customerId", "serviceId"),
-    CONSTRAINT "CustomerService_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT "CustomerService_serviceId_fkey" FOREIGN KEY ("serviceId") REFERENCES "Service" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT "CustomerService_pkey" PRIMARY KEY ("customerId","serviceId")
 );
 
 -- CreateTable
 CREATE TABLE "Observation" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "customerId" TEXT NOT NULL,
     "text" TEXT NOT NULL,
     "author" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "Observation_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Observation_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "AuditLog" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "action" TEXT NOT NULL,
     "entityId" TEXT NOT NULL,
     "actor" TEXT NOT NULL,
     "detail" TEXT,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "AuditLog_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "ExternalLink" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "customerId" TEXT NOT NULL,
     "provider" TEXT NOT NULL,
     "externalId" TEXT NOT NULL,
-    "externalUpdatedAt" DATETIME,
-    "lastSyncedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "externalUpdatedAt" TIMESTAMP(3),
+    "lastSyncedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "lastSyncDirection" TEXT NOT NULL,
-    CONSTRAINT "ExternalLink_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+
+    CONSTRAINT "ExternalLink_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "SyncLog" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "provider" TEXT NOT NULL,
     "direction" TEXT NOT NULL,
     "customerId" TEXT,
     "status" TEXT NOT NULL,
     "message" TEXT,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "SyncLog_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -129,12 +128,6 @@ CREATE INDEX "UserSession_email_idx" ON "UserSession"("email");
 
 -- CreateIndex
 CREATE INDEX "UserSession_expiresAt_idx" ON "UserSession"("expiresAt");
-
--- CreateIndex
-CREATE INDEX "AuthenticationCode_email_idx" ON "AuthenticationCode"("email");
-
--- CreateIndex
-CREATE INDEX "AuthenticationCode_email_requestedAt_idx" ON "AuthenticationCode"("email", "requestedAt");
 
 -- CreateIndex
 CREATE INDEX "Customer_companyName_idx" ON "Customer"("companyName");
@@ -204,3 +197,15 @@ CREATE INDEX "SyncLog_customerId_idx" ON "SyncLog"("customerId");
 
 -- CreateIndex
 CREATE INDEX "SyncLog_createdAt_idx" ON "SyncLog"("createdAt");
+
+-- AddForeignKey
+ALTER TABLE "CustomerService" ADD CONSTRAINT "CustomerService_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "CustomerService" ADD CONSTRAINT "CustomerService_serviceId_fkey" FOREIGN KEY ("serviceId") REFERENCES "Service"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Observation" ADD CONSTRAINT "Observation_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ExternalLink" ADD CONSTRAINT "ExternalLink_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE CASCADE ON UPDATE CASCADE;

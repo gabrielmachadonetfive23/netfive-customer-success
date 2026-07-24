@@ -90,11 +90,11 @@ function buildWhere(filters: CustomerFilters): Prisma.CustomerWhereInput {
   if (filters.search) {
     const search = filters.search;
     where.OR = [
-      { companyName: { contains: search } },
-      { segment: { contains: search } },
-      { contactName: { contains: search } },
-      { csOwner: { contains: search } },
-      { services: { some: { service: { name: { contains: search } } } } },
+      { companyName: { contains: search, mode: "insensitive" } },
+      { segment: { contains: search, mode: "insensitive" } },
+      { contactName: { contains: search, mode: "insensitive" } },
+      { csOwner: { contains: search, mode: "insensitive" } },
+      { services: { some: { service: { name: { contains: search, mode: "insensitive" } } } } },
     ];
   }
 

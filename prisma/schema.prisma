@@ -1,16 +1,17 @@
 // Netfive Customer Success — Prisma schema
-// Provider padrão de desenvolvimento: SQLite (sem dependência de Docker).
-// Para produção com PostgreSQL, troque provider = "sqlite" por "postgresql"
-// e aponte DATABASE_URL para a instância Postgres. O restante do schema
-// e todas as regras de negócio permanecem compatíveis com ambos.
+// Banco: PostgreSQL (Supabase). DATABASE_URL usa o transaction pooler (runtime,
+// serverless-friendly); DIRECT_URL usa o session pooler/conexão direta,
+// necessária para rodar migrations (o modo transaction não suporta prepared
+// statements exigidos pelo Prisma Migrate).
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // ---------------------------------------------------------------------------

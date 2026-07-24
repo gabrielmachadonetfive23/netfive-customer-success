@@ -159,12 +159,52 @@ npm run start
 
 ## Deploy
 
-1. Provisione um banco PostgreSQL (recomendado em produção) e configure `DATABASE_URL`.
-2. Configure todas as variáveis de ambiente obrigatórias (ver [Configuração](#configuração)).
-3. Rode `npx prisma migrate deploy` e `npm run db:seed`.
-4. Rode `npm run build` e sirva com `npm run start` (ou a plataforma de sua preferência com suporte a Next.js — Vercel, Docker, etc.).
-5. Garanta HTTPS em produção (o cookie de sessão é `Secure`).
-6. Se for usar Smartsheet/Pipedrive, registre os webhooks apontando para a URL pública final.
+Guia para publicar a plataforma em produção (Vercel + Supabase) e compartilhar o link com a equipe.
+
+### 1. Banco de dados (Supabase)
+
+1. Crie um projeto em [supabase.com](https://supabase.com) (ou use um já existente).
+2. No painel do projeto, clique em **Connect** (topo da página) e copie duas strings de conexão:
+   - **Transaction pooler** (porta `6543`) → vai em `DATABASE_URL`. **Adicione `?pgbouncer=true` no final** — sem isso, o Prisma quebra com o erro `prepared statement "sX" does not exist`, porque o modo transaction do pgbouncer não suporta prepared statements por padrão.
+   - **Session pooler** ou **Direct connection** (porta `5432`) → vai em `DIRECT_URL` (usada apenas para rodar migrations, sem a flag `pgbouncer`).
+3. Em `prisma/schema.prisma`, troque o bloco `datasource db` para:
+   ```prisma
+   datasource db {
+     provider  = "postgresql"
+     url       = env("DATABASE_URL")
+     directUrl = env("DIRECT_URL")
+   }
+   ```
+4. Apague `prisma/migrations/` (as migrations atuais são específicas do SQLite) e gere uma migration inicial nova, local, apontando para o Supabase:
+   ```bash
+   npx prisma migrate dev --name init
+   npm run db:seed
+   ```
+
+### 2. Repositório (GitHub)
+
+```bash
+git remote add origin https://github.com/<sua-conta>/netfive-customer-success.git
+git branch -M main
+git push -u origin main
+```
+
+(Se ainda não tem o repositório criado, crie um novo — vazio, sem README — em [github.com/new](https://github.com/new) antes do passo acima.)
+
+### 3. Deploy (Vercel)
+
+1. Em [vercel.com/new](https://vercel.com/new), importe o repositório do GitHub.
+2. Em **Environment Variables**, adicione todas as variáveis obrigatórias (ver [Configuração](#configuração)): `DATABASE_URL`, `DIRECT_URL`, `AUTH_SECRET`, `ALLOWED_EMAILS`, e as de Smartsheet/Pipedrive se for usar.
+3. Clique em **Deploy**. A Vercel builda e publica automaticamente (URL do tipo `netfive-cs.vercel.app`, ou configure um domínio próprio depois em **Settings → Domains**).
+4. A partir daí, todo `git push` para `main` gera um novo deploy automático.
+
+**Alternativa sem GitHub**: rode `npx vercel` na raiz do projeto, faça login quando solicitado, e siga as perguntas do terminal (mesmas variáveis de ambiente precisam ser configuradas com `npx vercel env add`). Nesse caminho, atualizações futuras exigem rodar `npx vercel --prod` manualmente a cada mudança.
+
+### 4. Depois do primeiro deploy
+
+- Garanta que todos que precisam acessar estejam em `ALLOWED_EMAILS`.
+- Se for usar Smartsheet/Pipedrive, registre os webhooks apontando para a URL final (`https://netfive-cs.vercel.app/api/webhooks/...`).
+- HTTPS já vem por padrão na Vercel — o cookie de sessão `Secure` funciona sem configuração extra.
 
 ## Checklist de segurança
 
