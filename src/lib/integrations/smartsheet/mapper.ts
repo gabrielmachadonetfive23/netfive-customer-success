@@ -1,6 +1,19 @@
+import { parse as parseCsvLine } from "csv-parse/sync";
 import type { CustomerDTO } from "@/lib/types";
 import { SMARTSHEET_SYNC_FIELDS } from "@/lib/integrations/field-mapping";
 import { getSheetColumns, type SmartsheetCell, type SmartsheetColumn, type SmartsheetRow } from "@/lib/integrations/smartsheet/client";
+
+/**
+ * O Smartsheet junta valores de colunas de seleção múltipla em uma única
+ * string separada por vírgula, colocando entre aspas qualquer valor que já
+ * contenha vírgula (ex.: "Governança, Risco e Conformidade"). Por isso a
+ * separação precisa seguir regras estilo CSV, não um split(",") ingênuo.
+ */
+export function parseSmartsheetMultiValue(raw: string | number | null | undefined): string[] {
+  if (raw === null || raw === undefined || raw === "") return [];
+  const [record] = parseCsvLine(String(raw), { trim: true, relax_quotes: true }) as string[][];
+  return (record ?? []).map((v) => v.trim()).filter(Boolean);
+}
 
 function toCellValues(customer: CustomerDTO, key: (typeof SMARTSHEET_SYNC_FIELDS)[number]["key"]): string[] {
   if (key === "services") {

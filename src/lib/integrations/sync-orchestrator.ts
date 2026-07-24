@@ -1,12 +1,48 @@
 import { prisma } from "@/lib/db";
 import type { CustomerDTO } from "@/lib/types";
-import { ALLOWED_CATEGORIES, DEFAULT_HEALTH_STATUS, HEALTH_STATUSES } from "@/lib/constants";
+import { ALLOWED_CATEGORIES, DEFAULT_HEALTH_STATUS, HEALTH_STATUSES, normalizeServiceName } from "@/lib/constants";
 import * as smartsheetClient from "@/lib/integrations/smartsheet/client";
 import * as smartsheetMapper from "@/lib/integrations/smartsheet/mapper";
 import * as pipedriveClient from "@/lib/integrations/pipedrive/client";
 import * as pipedriveMapper from "@/lib/integrations/pipedrive/mapper";
 import type { SyncProvider } from "@/lib/integrations/types";
-import { findCustomerDetailById, mapCustomerToDTO } from "@/lib/repositories/customer-repository";
+import { findCustomerDetailById } from "@/lib/repositories/customer-repository";
+
+/** Interpreta o texto de serviços vindo do provedor de acordo com suas regras de formatação. */
+function parseServiceNames(provider: SyncProvider, raw: string | number | null): string[] {
+  if (raw === null || raw === undefined || raw === "") return [];
+  if (provider === "smartsheet") {
+    return smartsheetMapper.parseSmartsheetMultiValue(raw);
+  }
+  return String(raw)
+    .split(",")
+    .map((name) => name.trim())
+    .filter(Boolean);
+}
+
+/** Garante que os serviços existam (cria como inativos os que não estiverem no catálogo) e retorna os IDs. */
+async function resolveServiceIds(rawNames: string[]): Promise<string[]> {
+  const ids: string[] = [];
+  for (const rawName of rawNames) {
+    const name = normalizeServiceName(rawName);
+    const service = await prisma.service.upsert({
+      where: { name },
+      update: {},
+      create: { name, active: false },
+    });
+    ids.push(service.id);
+  }
+  return ids;
+}
+
+async function replaceCustomerServices(customerId: string, serviceIds: string[]): Promise<void> {
+  await prisma.customerService.deleteMany({ where: { customerId } });
+  if (serviceIds.length > 0) {
+    await prisma.customerService.createMany({
+      data: serviceIds.map((serviceId) => ({ customerId, serviceId })),
+    });
+  }
+}
 
 function integrationsEnabled(provider: SyncProvider): boolean {
   if (provider === "smartsheet") {
@@ -181,6 +217,12 @@ export async function applyIncomingChange(params: {
   if (values.revenuePeriod !== undefined) data.revenuePeriod = coerceText(values.revenuePeriod);
 
   await prisma.customer.update({ where: { id: localCustomer.id }, data });
+
+  if (values.services !== undefined) {
+    const serviceIds = await resolveServiceIds(parseServiceNames(provider, values.services));
+    await replaceCustomerServices(localCustomer.id, serviceIds);
+  }
+
   await prisma.externalLink.update({
     where: { customerId_provider: { customerId: localCustomer.id, provider } },
     data: { externalUpdatedAt, lastSyncDirection: "pull", lastSyncedAt: new Date() },
@@ -215,8 +257,12 @@ async function createCustomerFromExternal(
 
   const customer = await prisma.customer.create({
     data: { companyName, csOwner, category, healthStatus: DEFAULT_HEALTH_STATUS },
-    include: { services: { include: { service: true } } },
   });
+
+  if (values.services !== undefined) {
+    const serviceIds = await resolveServiceIds(parseServiceNames(provider, values.services));
+    await replaceCustomerServices(customer.id, serviceIds);
+  }
 
   await prisma.externalLink.create({
     data: {
@@ -231,5 +277,6 @@ async function createCustomerFromExternal(
   await logSync({ provider, direction: "pull", customerId: customer.id, status: "success", message: "Cliente criado a partir de registro externo." });
 
   const otherProvider: SyncProvider = provider === "smartsheet" ? "pipedrive" : "smartsheet";
-  await pushToProvider(mapCustomerToDTO(customer), otherProvider);
+  const created = await findCustomerDetailById(customer.id);
+  await pushToProvider(created, otherProvider);
 }
