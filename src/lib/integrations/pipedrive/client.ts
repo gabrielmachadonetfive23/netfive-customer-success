@@ -10,6 +10,21 @@ export interface PipedriveOrganization {
   [customFieldKey: string]: unknown;
 }
 
+export interface PipedriveDeal {
+  id: number;
+  title: string;
+  status: "open" | "won" | "lost" | "deleted";
+  value: number;
+  currency: string;
+  add_time: string;
+  close_time: string | null;
+}
+
+export interface PipedriveOrgSearchResult {
+  id: number;
+  name: string;
+}
+
 function getConfig() {
   const token = process.env.PIPEDRIVE_API_TOKEN;
   const domain = process.env.PIPEDRIVE_DOMAIN;
@@ -73,6 +88,22 @@ export async function updateOrganization(
     method: "PUT",
     body: JSON.stringify(fields),
   });
+}
+
+/** Negócios (deals) associados a uma organização, mais recentes primeiro. */
+export async function listOrganizationDeals(organizationId: string): Promise<PipedriveDeal[]> {
+  const deals = await pipedriveRequest<PipedriveDeal[] | null>(
+    `/organizations/${organizationId}/deals?status=all_not_deleted`,
+  );
+  return (deals ?? []).sort((a, b) => new Date(b.add_time).getTime() - new Date(a.add_time).getTime());
+}
+
+/** Busca organizações por nome — usada para localizar uma organização já existente antes de criar uma nova. */
+export async function searchOrganizationsByName(term: string): Promise<PipedriveOrgSearchResult[]> {
+  const result = await pipedriveRequest<{ items: { item: PipedriveOrgSearchResult }[] } | null>(
+    `/organizations/search?term=${encodeURIComponent(term)}`,
+  );
+  return (result?.items ?? []).map((i) => i.item);
 }
 
 /** Verifica a autenticação Basic enviada pelo Pipedrive em cada chamada de webhook. */

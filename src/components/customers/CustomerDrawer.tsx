@@ -6,6 +6,7 @@ import { apiFetch, ApiClientError } from "@/lib/api-client";
 import { CloseIcon, ExternalLinkIcon, SyncIcon, TrashIcon } from "@/components/icons";
 import { HealthScoreBar } from "@/components/customers/HealthScoreBar";
 import { ObservationsTimeline } from "@/components/customers/ObservationsTimeline";
+import { PipedriveDealsSection } from "@/components/customers/PipedriveDealsSection";
 import { DeleteCustomerModal } from "@/components/customers/DeleteCustomerModal";
 import { CustomerForm } from "@/components/customers/CustomerForm";
 import type { CustomerDetailDTO, ServiceOption } from "@/lib/types";
@@ -175,6 +176,11 @@ export function CustomerDrawer({
                   <Field label="Próximo passo" value={customer.expansionNextStep} />
                   <Field label="Estimativa de crescimento" value={customer.growthEstimate} />
                 </dl>
+              </section>
+
+              <section>
+                <h3 className="mb-3 text-sm font-semibold text-netfive-gray-100">Negócios (Pipedrive)</h3>
+                <PipedriveDealsSection customerId={customer.id} />
               </section>
 
               <section>
