@@ -6,6 +6,18 @@
   color-scheme: dark;
 }
 
+/* Selects nativos herdam texto claro pensado para fundo escuro, mas o
+   navegador desenha a lista de opções com fundo claro — force cores
+   explícitas nas opções para manter contraste legível. */
+select {
+  color-scheme: dark;
+}
+
+select option {
+  background-color: #131316;
+  color: #f4f4f5;
+}
+
 html,
 body {
   background-color: #0a0a0b;
