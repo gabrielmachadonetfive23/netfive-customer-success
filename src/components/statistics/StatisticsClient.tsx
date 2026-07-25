@@ -6,15 +6,20 @@ import { useCustomerDrawer } from "@/lib/hooks/useCustomerDrawer";
 import {
   computeStatisticsKpis,
   getDistributionByCategory,
+  getHealthStatusDistribution,
   getNoVisitCustomers,
   getOverdueContacts,
   getPortfolioByCsOwner,
+  getServiceDistribution,
+  getServiceStats,
   getTopNoContactCustomers,
+  getUpcomingRenewals,
 } from "@/lib/services/statistics-analytics";
 import { riskCountTone } from "@/lib/kpi-tone";
 import { KpiCard } from "@/components/ui/KpiCard";
 import { CsOwnerSelect, uniqueCsOwners } from "@/components/filters/FilterControls";
 import { DistributionBarChart } from "@/components/statistics/DistributionBarChart";
+import { HealthStatusBarChart } from "@/components/statistics/HealthStatusBarChart";
 import { formatDate } from "@/lib/format";
 
 function PanelTable({
@@ -85,6 +90,10 @@ export function StatisticsClient() {
   const overdueContacts = getOverdueContacts(customers, now);
   const portfolioByCs = getPortfolioByCsOwner(customers);
   const byCategory = getDistributionByCategory(customers);
+  const byService = getServiceDistribution(customers);
+  const serviceStats = getServiceStats(customers);
+  const byHealthStatus = getHealthStatusDistribution(customers);
+  const upcomingRenewals = getUpcomingRenewals(customers, now);
 
   return (
     <div className="space-y-6">
@@ -171,16 +180,46 @@ export function StatisticsClient() {
             </div>
           </div>
 
-          <PanelTable
-            title="Contatos planejados em atraso"
-            emptyMessage="Nenhum contato em atraso."
-            headers={["Empresa", "CS", "Data prevista", "Dias de atraso"]}
-            rows={overdueContacts.map((entry) => ({
-              key: entry.customerId,
-              onClick: () => openCustomer(entry.customerId),
-              cells: [entry.companyName, entry.csOwner, formatDate(entry.nextContact), entry.daysOverdue],
-            }))}
-          />
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <div className="glass-panel p-4">
+              <div className="mb-3 flex items-baseline justify-between gap-2">
+                <h2 className="text-sm font-semibold text-netfive-gray-100">Serviços mais contratados</h2>
+                <span className="text-xs text-netfive-gray-500">
+                  {serviceStats.distinctServices} serviços em uso · média de {serviceStats.avgServicesPerCustomer.toFixed(1)} por cliente
+                </span>
+              </div>
+              <div className="max-h-72 overflow-y-auto pr-1">
+                <DistributionBarChart data={byService} />
+              </div>
+            </div>
+            <div className="glass-panel p-4">
+              <h2 className="mb-3 text-sm font-semibold text-netfive-gray-100">Clientes por status de saúde</h2>
+              <HealthStatusBarChart data={byHealthStatus} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <PanelTable
+              title="Renovações nos próximos 90 dias"
+              emptyMessage="Nenhuma renovação prevista para os próximos 90 dias."
+              headers={["Empresa", "CS", "Data de renovação", "Dias restantes"]}
+              rows={upcomingRenewals.map((entry) => ({
+                key: entry.customerId,
+                onClick: () => openCustomer(entry.customerId),
+                cells: [entry.companyName, entry.csOwner, formatDate(entry.renewalDate), entry.daysUntilRenewal],
+              }))}
+            />
+            <PanelTable
+              title="Contatos planejados em atraso"
+              emptyMessage="Nenhum contato em atraso."
+              headers={["Empresa", "CS", "Data prevista", "Dias de atraso"]}
+              rows={overdueContacts.map((entry) => ({
+                key: entry.customerId,
+                onClick: () => openCustomer(entry.customerId),
+                cells: [entry.companyName, entry.csOwner, formatDate(entry.nextContact), entry.daysOverdue],
+              }))}
+            />
+          </div>
         </>
       )}
     </div>

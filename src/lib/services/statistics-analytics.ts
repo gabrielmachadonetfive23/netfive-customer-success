@@ -1,4 +1,5 @@
 import type { CustomerDTO } from "@/lib/types";
+import { HEALTH_STATUSES, type HealthStatus } from "@/lib/constants";
 import { diffInDays, isNonEmpty, startOfDay } from "@/lib/services/date-utils";
 
 export interface StatisticsKpis {
@@ -39,6 +40,25 @@ export interface DistributionSlice {
   label: string;
   count: number;
   percent: number;
+}
+
+export interface HealthStatusSlice {
+  status: HealthStatus;
+  count: number;
+  percent: number;
+}
+
+export interface RenewalEntry {
+  customerId: string;
+  companyName: string;
+  csOwner: string;
+  renewalDate: string;
+  daysUntilRenewal: number;
+}
+
+export interface ServiceStats {
+  distinctServices: number;
+  avgServicesPerCustomer: number;
 }
 
 export function computeStatisticsKpis(customers: CustomerDTO[], now: Date): StatisticsKpis {
@@ -150,4 +170,62 @@ export function getDistributionByCategory(customers: CustomerDTO[]): Distributio
   return Array.from(counts.entries())
     .map(([label, count]) => ({ label, count, percent: total > 0 ? (count / total) * 100 : 0 }))
     .sort((a, b) => b.count - a.count);
+}
+
+/** Serviços mais contratados: quantos clientes têm cada serviço, do mais para o menos comum. */
+export function getServiceDistribution(customers: CustomerDTO[]): DistributionSlice[] {
+  const counts = new Map<string, number>();
+  for (const c of customers) {
+    for (const service of c.services) {
+      counts.set(service.name, (counts.get(service.name) ?? 0) + 1);
+    }
+  }
+  const total = customers.length;
+  return Array.from(counts.entries())
+    .map(([label, count]) => ({ label, count, percent: total > 0 ? (count / total) * 100 : 0 }))
+    .sort((a, b) => b.count - a.count);
+}
+
+/** Profundidade de cross-sell: quantos serviços distintos estão em uso e a média por cliente. */
+export function getServiceStats(customers: CustomerDTO[]): ServiceStats {
+  const distinctServices = new Set(customers.flatMap((c) => c.services.map((s) => s.name))).size;
+  const totalServiceLinks = customers.reduce((sum, c) => sum + c.services.length, 0);
+  return {
+    distinctServices,
+    avgServicesPerCustomer: customers.length > 0 ? totalServiceLinks / customers.length : 0,
+  };
+}
+
+/** Saúde da carteira: clientes por status (ordem fixa, não por volume — a ordem em si é o dado). */
+export function getHealthStatusDistribution(customers: CustomerDTO[]): HealthStatusSlice[] {
+  const counts = new Map<HealthStatus, number>();
+  for (const c of customers) {
+    counts.set(c.healthStatus, (counts.get(c.healthStatus) ?? 0) + 1);
+  }
+  const total = customers.length;
+  return HEALTH_STATUSES.map((status) => ({
+    status,
+    count: counts.get(status) ?? 0,
+    percent: total > 0 ? ((counts.get(status) ?? 0) / total) * 100 : 0,
+  }));
+}
+
+/** Renovações a vencer nos próximos N dias, da mais urgente para a mais distante. */
+export function getUpcomingRenewals(customers: CustomerDTO[], now: Date, withinDays = 90): RenewalEntry[] {
+  const today = startOfDay(now);
+
+  return customers
+    .filter((c) => {
+      if (c.renewalDate === null) return false;
+      const days = diffInDays(new Date(c.renewalDate), today);
+      return days >= 0 && days <= withinDays;
+    })
+    .map((c) => ({
+      customerId: c.id,
+      companyName: c.companyName,
+      csOwner: c.csOwner,
+      renewalDate: c.renewalDate as string,
+      daysUntilRenewal: diffInDays(new Date(c.renewalDate as string), today),
+    }))
+    .sort((a, b) => a.daysUntilRenewal - b.daysUntilRenewal);
 }

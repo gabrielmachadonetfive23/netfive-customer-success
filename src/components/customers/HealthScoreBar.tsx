@@ -1,6 +1,7 @@
 import type { HealthStatus } from "@/lib/constants";
 
-const STATUS_COLORS: Record<HealthStatus, string> = {
+/** Cor de preenchimento por status de saúde — reutilizada em qualquer barra que represente o status. */
+export const STATUS_COLORS: Record<HealthStatus, string> = {
   Saudável: "bg-emerald-500",
   Atenção: "bg-amber-500",
   Crítico: "bg-netfive-red",
