@@ -7,7 +7,9 @@ import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
 import { useCustomerDrawer } from "@/lib/hooks/useCustomerDrawer";
 import { useDataRefresh } from "@/lib/contexts/DataRefreshContext";
 import { computeDashboardKpis } from "@/lib/services/dashboard-analytics";
+import { coveragePercentTone } from "@/lib/kpi-tone";
 import { KpiCard } from "@/components/ui/KpiCard";
+import { HEALTH_STATUS_TEXT_COLOR } from "@/components/customers/HealthScoreBar";
 import { SortableHeader } from "@/components/ui/SortableHeader";
 import { Pagination } from "@/components/ui/Pagination";
 import { TableEmptyState, TableErrorState, TableSkeleton } from "@/components/ui/TableStates";
@@ -147,7 +149,11 @@ export function DashboardClient() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <KpiCard label="Clientes na base" value={kpis.totalCustomers} />
-        <KpiCard label="Health avaliado" value={kpis.healthEvaluated} />
+        <KpiCard
+          label="Health avaliado"
+          value={kpis.healthEvaluated}
+          tone={coveragePercentTone((kpis.healthEvaluated / Math.max(1, kpis.totalCustomers)) * 100, kpis.totalCustomers)}
+        />
         <KpiCard label="Planos de expansão" value={kpis.expansionPlans} />
         <KpiCard label="Próximos contatos" value={kpis.upcomingContacts} />
         <IntegrationsStatusCard />
@@ -191,11 +197,11 @@ export function DashboardClient() {
           {!isLoadingTable && !tableError && tableResult && tableResult.items.length > 0 && (
             <tbody>
               {tableResult.items.map((customer) => (
-                <tr key={customer.id} className="border-t border-netfive-border hover:bg-white/[0.03]">
+                <tr key={customer.id} className="border-t border-netfive-border transition-colors hover:bg-netfive-red/[0.06]">
                   <td className="px-4 py-3 font-medium text-netfive-gray-100">{customer.companyName}</td>
                   <td className="px-4 py-3 text-netfive-gray-300">{customer.csOwner}</td>
                   <td className="px-4 py-3 text-netfive-gray-300">{customer.category}</td>
-                  <td className="px-4 py-3 text-netfive-gray-300">
+                  <td className={`px-4 py-3 font-medium ${HEALTH_STATUS_TEXT_COLOR[customer.healthStatus]}`}>
                     {customer.healthScore !== null ? `${customer.healthScore} · ${customer.healthStatus}` : customer.healthStatus}
                   </td>
                   <td className="px-4 py-3 text-netfive-gray-300">{formatDate(customer.lastContact)}</td>

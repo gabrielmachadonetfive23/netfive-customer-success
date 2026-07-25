@@ -23,11 +23,11 @@ body {
   }
 
   .glass-card {
-    @apply bg-white/[0.03] backdrop-blur-glass border border-netfive-border rounded-xl2 shadow-glass-sm;
+    @apply bg-white/[0.03] backdrop-blur-glass border border-netfive-border rounded-xl2 shadow-glass-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-netfive-red/60 hover:shadow-glow-red-sm;
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-netfive-red px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-netfive-red-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-netfive-red disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-netfive-red px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:brightness-110 hover:shadow-glow-red focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-netfive-red disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .btn-secondary {
@@ -35,7 +35,7 @@ body {
   }
 
   .btn-danger {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-netfive-red px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-netfive-red-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-netfive-red disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-netfive-red px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:brightness-110 hover:shadow-glow-red focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-netfive-red disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .input-field {

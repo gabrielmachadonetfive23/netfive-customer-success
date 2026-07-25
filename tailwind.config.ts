@@ -23,6 +23,8 @@ const config: Config = {
       boxShadow: {
         glass: "0 8px 32px 0 rgba(0, 0, 0, 0.45)",
         "glass-sm": "0 2px 12px 0 rgba(0, 0, 0, 0.35)",
+        "glow-red": "0 0 0 1px rgba(225, 29, 46, 0.5), 0 0 32px 2px rgba(225, 29, 46, 0.35)",
+        "glow-red-sm": "0 0 0 1px rgba(225, 29, 46, 0.45), 0 0 18px 0 rgba(225, 29, 46, 0.3)",
       },
       backdropBlur: {
         glass: "20px",

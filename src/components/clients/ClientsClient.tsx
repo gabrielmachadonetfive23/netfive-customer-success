@@ -11,7 +11,9 @@ import {
   computeFinancialBarData,
   computeSegmentDistribution,
 } from "@/lib/services/clients-analytics";
+import { coveragePercentTone } from "@/lib/kpi-tone";
 import { KpiCard } from "@/components/ui/KpiCard";
+import { HEALTH_STATUS_TEXT_COLOR } from "@/components/customers/HealthScoreBar";
 import { Pagination } from "@/components/ui/Pagination";
 import { TableEmptyState, TableErrorState, TableSkeleton } from "@/components/ui/TableStates";
 import { CsOwnerSelect, SearchInput, uniqueCsOwners } from "@/components/filters/FilterControls";
@@ -112,6 +114,7 @@ export function ClientsClient() {
           label="Com segmento informado"
           value={kpis.withSegment}
           hint={formatPercent(kpis.withSegmentPercent)}
+          tone={coveragePercentTone(kpis.withSegmentPercent, kpis.totalCustomers)}
         />
         <KpiCard label={`Receita pública divulgada (FY${kpis.fiscalYear})`} value={formatCurrencyBRL(kpis.totalPublicRevenue)} />
         <KpiCard label="Clientes com faturamento verificado" value={kpis.verifiedRevenueCount} />
@@ -162,7 +165,7 @@ export function ClientsClient() {
                 return (
                   <tr
                     key={customer.id}
-                    className="cursor-pointer border-t border-netfive-border hover:bg-white/[0.03]"
+                    className="cursor-pointer border-t border-netfive-border transition-colors hover:bg-netfive-red/[0.06]"
                     tabIndex={0}
                     onClick={() => openCustomer(customer.id)}
                     onKeyDown={(event) => {
@@ -176,7 +179,9 @@ export function ClientsClient() {
                     <td className="max-w-[200px] truncate px-4 py-3 text-netfive-gray-300">
                       {customer.services.map((s) => s.name).join(", ") || "—"}
                     </td>
-                    <td className="px-4 py-3 text-netfive-gray-300">{customer.healthScore ?? "—"}</td>
+                    <td className={`px-4 py-3 font-medium ${customer.healthScore !== null ? HEALTH_STATUS_TEXT_COLOR[customer.healthStatus] : "text-netfive-gray-300"}`}>
+                      {customer.healthScore ?? "—"}
+                    </td>
                     <td className="px-4 py-3 text-netfive-gray-300">
                       {isCurrentFiscalYear ? formatCurrencyBRL(customer.annualRevenue) : "—"}
                     </td>

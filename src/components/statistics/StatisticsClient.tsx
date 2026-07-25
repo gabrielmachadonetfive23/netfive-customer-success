@@ -11,6 +11,7 @@ import {
   getPortfolioByCsOwner,
   getTopNoContactCustomers,
 } from "@/lib/services/statistics-analytics";
+import { riskCountTone } from "@/lib/kpi-tone";
 import { KpiCard } from "@/components/ui/KpiCard";
 import { CsOwnerSelect, uniqueCsOwners } from "@/components/filters/FilterControls";
 import { DistributionBarChart } from "@/components/statistics/DistributionBarChart";
@@ -48,7 +49,7 @@ function PanelTable({
               {rows.map((row) => (
                 <tr
                   key={row.key}
-                  className="cursor-pointer border-t border-netfive-border hover:bg-white/[0.03]"
+                  className="cursor-pointer border-t border-netfive-border transition-colors hover:bg-netfive-red/[0.06]"
                   tabIndex={0}
                   onClick={row.onClick}
                   onKeyDown={(event) => event.key === "Enter" && row.onClick()}
@@ -103,12 +104,36 @@ export function StatisticsClient() {
       ) : (
         <>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <KpiCard label="Sem contato há mais de 20 dias" value={kpis.noContactOver20Days} />
-            <KpiCard label="Sem nenhum contato registrado" value={kpis.neverContacted} />
-            <KpiCard label="Sem visita nos últimos 60 dias" value={kpis.noVisitOver60Days} />
-            <KpiCard label="Nunca visitados" value={kpis.neverVisited} />
-            <KpiCard label="Próximos contatos atrasados" value={kpis.overdueNextContacts} />
-            <KpiCard label="Health Score pendente" value={kpis.healthPending} />
+            <KpiCard
+              label="Sem contato há mais de 20 dias"
+              value={kpis.noContactOver20Days}
+              tone={riskCountTone(kpis.noContactOver20Days, customers.length)}
+            />
+            <KpiCard
+              label="Sem nenhum contato registrado"
+              value={kpis.neverContacted}
+              tone={riskCountTone(kpis.neverContacted, customers.length)}
+            />
+            <KpiCard
+              label="Sem visita nos últimos 60 dias"
+              value={kpis.noVisitOver60Days}
+              tone={riskCountTone(kpis.noVisitOver60Days, customers.length)}
+            />
+            <KpiCard
+              label="Nunca visitados"
+              value={kpis.neverVisited}
+              tone={riskCountTone(kpis.neverVisited, customers.length)}
+            />
+            <KpiCard
+              label="Próximos contatos atrasados"
+              value={kpis.overdueNextContacts}
+              tone={riskCountTone(kpis.overdueNextContacts, customers.length)}
+            />
+            <KpiCard
+              label="Health Score pendente"
+              value={kpis.healthPending}
+              tone={riskCountTone(kpis.healthPending, customers.length)}
+            />
             <KpiCard label="Com plano de expansão" value={kpis.withExpansionPlan} />
           </div>
 
