@@ -15,7 +15,7 @@ import { KpiCard } from "@/components/ui/KpiCard";
 import { Pagination } from "@/components/ui/Pagination";
 import { TableEmptyState, TableErrorState, TableSkeleton } from "@/components/ui/TableStates";
 import { CsOwnerSelect, SearchInput, uniqueCsOwners } from "@/components/filters/FilterControls";
-import { SegmentDonutChart } from "@/components/clients/SegmentDonutChart";
+import { SegmentBarChart } from "@/components/clients/SegmentBarChart";
 import { FinancialBarChart } from "@/components/clients/FinancialBarChart";
 import { PlusIcon } from "@/components/icons";
 import { formatCurrencyBRL, formatPercent } from "@/lib/format";
@@ -124,7 +124,7 @@ export function ClientsClient() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="glass-panel p-4">
           <h2 className="mb-2 text-sm font-semibold text-netfive-gray-100">Clientes por segmento</h2>
-          <SegmentDonutChart data={segments} />
+          <SegmentBarChart data={segments} />
         </div>
         <div className="glass-panel p-4">
           <h2 className="mb-2 text-sm font-semibold text-netfive-gray-100">
