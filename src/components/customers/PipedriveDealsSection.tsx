@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api-client";
-import { formatCurrencyBRL, formatDate } from "@/lib/format";
+import { formatCurrency, formatDate } from "@/lib/format";
 
 interface PipedriveDeal {
   id: number;
@@ -74,7 +74,7 @@ export function PipedriveDealsSection({ customerId }: { customerId: string }) {
           <div className="min-w-0">
             <p className="truncate text-sm text-netfive-gray-100">{deal.title}</p>
             <p className="text-xs text-netfive-gray-500">
-              {formatDate(deal.close_time ?? deal.add_time)} · {formatCurrencyBRL(deal.value || null)}
+              {formatDate(deal.close_time ?? deal.add_time)} · {formatCurrency(deal.value, deal.currency)}
             </p>
           </div>
           <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_COLORS[deal.status]}`}>

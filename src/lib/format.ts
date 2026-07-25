@@ -23,6 +23,16 @@ export function formatCurrencyBRL(value: number | null | undefined): string {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 }
 
+/** Formata um valor monetário respeitando a moeda de origem (útil para negócios do Pipedrive, que podem estar em BRL, USD, etc.). */
+export function formatCurrency(value: number | null | undefined, currency: string): string {
+  if (value === null || value === undefined || value === 0) return "—";
+  try {
+    return new Intl.NumberFormat("pt-BR", { style: "currency", currency }).format(value);
+  } catch {
+    return new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 2 }).format(value) + " " + currency;
+  }
+}
+
 export function formatPercent(value: number, fractionDigits = 1): string {
   return `${value.toFixed(fractionDigits).replace(".", ",")}%`;
 }
