@@ -30,10 +30,10 @@ export function FinancialBarChart({
               key={entry.customerId}
               type="button"
               onClick={() => onSelect(entry.customerId)}
-              className="grid w-full grid-cols-[160px_1fr_140px] items-center gap-3 rounded-lg px-2 py-1.5 text-left hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-netfive-red"
+              className="grid w-full grid-cols-[160px_1fr_140px] items-center gap-3 rounded-lg px-2 py-1.5 text-left hover:bg-netfive-overlay/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-netfive-red"
             >
               <span className="truncate text-sm text-netfive-gray-100">{entry.companyName}</span>
-              <span className="h-3 overflow-hidden rounded-full bg-white/5">
+              <span className="h-3 overflow-hidden rounded-full bg-netfive-overlay/5">
                 {entry.value !== null && (
                   <span className="block h-full rounded-full bg-netfive-red" style={{ width: `${widthPercent}%` }} />
                 )}

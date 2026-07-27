@@ -56,7 +56,7 @@ export function PipedriveDealsSection({ customerId }: { customerId: string }) {
   }
 
   if (!data) {
-    return <div className="h-16 animate-pulse rounded-lg bg-white/5" />;
+    return <div className="h-16 animate-pulse rounded-lg bg-netfive-overlay/5" />;
   }
 
   if (!data.linked) {

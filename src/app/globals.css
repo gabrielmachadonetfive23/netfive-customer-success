@@ -3,29 +3,47 @@
 @tailwind utilities;
 
 :root {
+  --netfive-bg-rgb: 250 250 250;
+  --netfive-surface-rgb: 255 255 255;
+  --netfive-border: rgba(0, 0, 0, 0.1);
+  --netfive-overlay-rgb: 0 0 0;
+  --netfive-gray-100: #18181b;
+  --netfive-gray-300: #3f3f46;
+  --netfive-gray-500: #71717a;
+  --netfive-gray-700-rgb: 161 161 170;
+  --netfive-gray-900: #e4e4e7;
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --netfive-bg-rgb: 10 10 11;
+  --netfive-surface-rgb: 19 19 22;
+  --netfive-border: rgba(255, 255, 255, 0.08);
+  --netfive-overlay-rgb: 255 255 255;
+  --netfive-gray-100: #f4f4f5;
+  --netfive-gray-300: #d4d4d8;
+  --netfive-gray-500: #a1a1aa;
+  --netfive-gray-700-rgb: 82 82 91;
+  --netfive-gray-900: #18181b;
   color-scheme: dark;
 }
 
-/* Selects nativos herdam texto claro pensado para fundo escuro, mas o
-   navegador desenha a lista de opções com fundo claro — force cores
-   explícitas nas opções para manter contraste legível. */
-select {
-  color-scheme: dark;
-}
-
+/* Selects nativos herdam a cor de texto do tema, mas o navegador desenha a
+   lista de opções com fundo próprio — force cores explícitas nas opções
+   (usando as mesmas variáveis do tema) para manter contraste legível. */
 select option {
-  background-color: #131316;
-  color: #f4f4f5;
+  background-color: rgb(var(--netfive-surface-rgb));
+  color: var(--netfive-gray-100);
 }
 
 html,
 body {
-  background-color: #0a0a0b;
-  color: #f4f4f5;
+  background-color: rgb(var(--netfive-bg-rgb));
+  color: var(--netfive-gray-100);
 }
 
 * {
-  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  scrollbar-color: rgb(var(--netfive-overlay-rgb) / 0.2) transparent;
   scrollbar-width: thin;
 }
 
@@ -35,7 +53,7 @@ body {
   }
 
   .glass-card {
-    @apply bg-white/[0.03] backdrop-blur-glass border border-netfive-border rounded-xl2 shadow-glass-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-netfive-red/60 hover:shadow-glow-red-sm;
+    @apply bg-netfive-overlay/[0.03] backdrop-blur-glass border border-netfive-border rounded-xl2 shadow-glass-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-netfive-red/60 hover:shadow-glow-red-sm;
   }
 
   .btn-primary {
@@ -43,7 +61,7 @@ body {
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-netfive-border bg-white/5 px-4 py-2 text-sm font-medium text-netfive-gray-100 transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/40 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-netfive-border bg-netfive-overlay/5 px-4 py-2 text-sm font-medium text-netfive-gray-100 transition-colors hover:bg-netfive-overlay/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-netfive-overlay/40 disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .btn-danger {
@@ -51,7 +69,7 @@ body {
   }
 
   .input-field {
-    @apply w-full rounded-lg border border-netfive-border bg-white/5 px-3 py-2 text-sm text-netfive-gray-100 placeholder:text-netfive-gray-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-netfive-red;
+    @apply w-full rounded-lg border border-netfive-border bg-netfive-overlay/5 px-3 py-2 text-sm text-netfive-gray-100 placeholder:text-netfive-gray-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-netfive-red;
   }
 
   .field-label {

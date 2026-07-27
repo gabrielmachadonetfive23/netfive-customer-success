@@ -73,9 +73,9 @@ export function VisitsClient() {
               key={visit.customerId}
               type="button"
               onClick={() => openCustomer(visit.customerId)}
-              className="glass-card flex items-start gap-4 p-4 text-left transition-colors hover:bg-white/[0.06] focus-visible:outline focus-visible:outline-2 focus-visible:outline-netfive-red"
+              className="glass-card flex items-start gap-4 p-4 text-left transition-colors hover:bg-netfive-overlay/[0.06] focus-visible:outline focus-visible:outline-2 focus-visible:outline-netfive-red"
             >
-              <div className="flex w-14 shrink-0 flex-col items-center rounded-lg border border-netfive-border bg-white/5 py-2">
+              <div className="flex w-14 shrink-0 flex-col items-center rounded-lg border border-netfive-border bg-netfive-overlay/5 py-2">
                 <span className="text-xl font-bold text-netfive-gray-100">{visit.day}</span>
                 <span className="text-xs uppercase text-netfive-gray-500">{MONTH_LABELS[visit.month - 1]}</span>
               </div>

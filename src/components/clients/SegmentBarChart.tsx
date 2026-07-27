@@ -15,7 +15,7 @@ export function SegmentBarChart({ data }: { data: SegmentSlice[] }) {
           <span className="truncate text-sm text-netfive-gray-100" title={entry.segment}>
             {entry.segment}
           </span>
-          <span className="h-3 overflow-hidden rounded-full bg-white/5">
+          <span className="h-3 overflow-hidden rounded-full bg-netfive-overlay/5">
             <span
               className="block h-full rounded-full bg-netfive-red"
               style={{ width: `${Math.max(2, (entry.count / maxCount) * 100)}%` }}

@@ -26,7 +26,7 @@ export function HealthScoreBar({ score, status }: { score: number | null; status
         <span>{score !== null ? `${score}/100` : "—"}</span>
       </div>
       <div
-        className="h-2 w-full overflow-hidden rounded-full bg-white/10"
+        className="h-2 w-full overflow-hidden rounded-full bg-netfive-overlay/10"
         role="progressbar"
         aria-valuenow={score ?? 0}
         aria-valuemin={0}

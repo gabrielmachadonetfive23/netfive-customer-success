@@ -41,7 +41,7 @@ export function CustomerFullPageClient({ customerId, currentUserEmail }: { custo
   }
 
   if (!customer) {
-    return <div className="h-40 animate-pulse rounded-xl2 bg-white/5" />;
+    return <div className="h-40 animate-pulse rounded-xl2 bg-netfive-overlay/5" />;
   }
 
   return (

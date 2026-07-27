@@ -91,7 +91,7 @@ export function EditableField({ label, value, kind = "text", options, onSave }: 
           <button
             type="button"
             onClick={() => setIsEditing(true)}
-            className="w-full rounded px-1 -mx-1 py-0.5 text-left text-sm text-netfive-gray-100 hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-netfive-red"
+            className="w-full rounded px-1 -mx-1 py-0.5 text-left text-sm text-netfive-gray-100 hover:bg-netfive-overlay/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-netfive-red"
           >
             {kind === "url" && value ? (
               <a

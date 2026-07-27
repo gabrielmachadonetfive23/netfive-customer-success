@@ -13,7 +13,7 @@ export function DistributionBarChart({ data }: { data: DistributionSlice[] }) {
       {data.map((entry) => (
         <div key={entry.label} className="grid grid-cols-[120px_1fr_90px] items-center gap-3">
           <span className="truncate text-sm text-netfive-gray-100">{entry.label}</span>
-          <span className="h-3 overflow-hidden rounded-full bg-white/5">
+          <span className="h-3 overflow-hidden rounded-full bg-netfive-overlay/5">
             <span
               className="block h-full rounded-full bg-netfive-red"
               style={{ width: `${Math.max(2, (entry.count / maxCount) * 100)}%` }}

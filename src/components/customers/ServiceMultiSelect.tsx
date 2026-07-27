@@ -45,7 +45,7 @@ export function ServiceMultiSelect({ services, selectedIds, onChange }: ServiceM
       <div
         role="group"
         aria-label="Seleção de serviços"
-        className="max-h-56 overflow-y-auto rounded-lg border border-netfive-border bg-white/[0.02] p-2"
+        className="max-h-56 overflow-y-auto rounded-lg border border-netfive-border bg-netfive-overlay/[0.02] p-2"
       >
         {filtered.length === 0 && (
           <p className="px-2 py-2 text-sm text-netfive-gray-500">Nenhum serviço encontrado.</p>
@@ -53,7 +53,7 @@ export function ServiceMultiSelect({ services, selectedIds, onChange }: ServiceM
         {filtered.map((service) => (
           <label
             key={service.id}
-            className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm text-netfive-gray-200 hover:bg-white/5"
+            className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm text-netfive-gray-200 hover:bg-netfive-overlay/5"
           >
             <input
               type="checkbox"

@@ -51,8 +51,8 @@ export function Sidebar() {
                 aria-current={isActive ? "page" : undefined}
                 className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-netfive-red ${
                   isActive
-                    ? "bg-netfive-red/15 text-white"
-                    : "text-netfive-gray-500 hover:bg-white/5 hover:text-netfive-gray-100"
+                    ? "bg-netfive-red/15 text-netfive-red"
+                    : "text-netfive-gray-500 hover:bg-netfive-overlay/5 hover:text-netfive-gray-100"
                 }`}
               >
                 <Icon className="h-5 w-5 shrink-0" />
@@ -67,7 +67,7 @@ export function Sidebar() {
         type="button"
         onClick={handleLogout}
         disabled={isLoggingOut}
-        className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-netfive-gray-500 transition-colors hover:bg-white/5 hover:text-netfive-red focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-netfive-red disabled:opacity-50"
+        className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-netfive-gray-500 transition-colors hover:bg-netfive-overlay/5 hover:text-netfive-red focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-netfive-red disabled:opacity-50"
       >
         <LogoutIcon className="h-5 w-5 shrink-0" />
         <span className="hidden md:inline">{isLoggingOut ? "Saindo..." : "Sair"}</span>

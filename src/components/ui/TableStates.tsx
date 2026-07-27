@@ -5,7 +5,7 @@ export function TableSkeleton({ rows = 5, columns = 6 }: { rows?: number; column
         <tr key={rowIndex} className="border-t border-netfive-border">
           {Array.from({ length: columns }).map((__, colIndex) => (
             <td key={colIndex} className="px-4 py-3">
-              <div className="h-4 animate-pulse rounded bg-white/10" />
+              <div className="h-4 animate-pulse rounded bg-netfive-overlay/10" />
             </td>
           ))}
         </tr>

@@ -6,17 +6,18 @@ const config: Config = {
     extend: {
       colors: {
         netfive: {
-          bg: "#0a0a0b",
-          surface: "#131316",
-          border: "rgba(255,255,255,0.08)",
+          bg: "rgb(var(--netfive-bg-rgb) / <alpha-value>)",
+          surface: "rgb(var(--netfive-surface-rgb) / <alpha-value>)",
+          border: "var(--netfive-border)",
+          overlay: "rgb(var(--netfive-overlay-rgb) / <alpha-value>)",
           red: "#e11d2e",
           "red-dark": "#a3141f",
           gray: {
-            100: "#f4f4f5",
-            300: "#d4d4d8",
-            500: "#a1a1aa",
-            700: "#52525b",
-            900: "#18181b",
+            100: "var(--netfive-gray-100)",
+            300: "var(--netfive-gray-300)",
+            500: "var(--netfive-gray-500)",
+            700: "rgb(var(--netfive-gray-700-rgb) / <alpha-value>)",
+            900: "var(--netfive-gray-900)",
           },
         },
       },

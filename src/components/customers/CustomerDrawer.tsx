@@ -52,11 +52,11 @@ export function CustomerDrawer({
               href={`/clientes/${customer.id}`}
               title="Visualização ampla"
               aria-label="Abrir visualização ampla"
-              className="rounded p-1.5 text-netfive-gray-500 hover:bg-white/5 hover:text-netfive-gray-100"
+              className="rounded p-1.5 text-netfive-gray-500 hover:bg-netfive-overlay/5 hover:text-netfive-gray-100"
             >
               <ExpandIcon className="h-5 w-5" />
             </Link>
-            <button type="button" onClick={onClose} aria-label="Fechar ficha" className="rounded p-1.5 text-netfive-gray-500 hover:bg-white/5 hover:text-netfive-gray-100">
+            <button type="button" onClick={onClose} aria-label="Fechar ficha" className="rounded p-1.5 text-netfive-gray-500 hover:bg-netfive-overlay/5 hover:text-netfive-gray-100">
               <CloseIcon className="h-5 w-5" />
             </button>
           </div>

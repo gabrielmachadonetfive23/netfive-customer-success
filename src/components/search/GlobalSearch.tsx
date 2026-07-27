@@ -91,7 +91,7 @@ export function GlobalSearch() {
                 key={customer.id}
                 type="button"
                 onClick={() => handleSelect(customer.id)}
-                className="flex w-full flex-col items-start rounded-lg px-3 py-2 text-left text-sm hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-netfive-red"
+                className="flex w-full flex-col items-start rounded-lg px-3 py-2 text-left text-sm hover:bg-netfive-overlay/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-netfive-red"
               >
                 <span className="font-medium text-netfive-gray-100">{customer.companyName}</span>
                 <span className="text-xs text-netfive-gray-500">

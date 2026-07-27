@@ -48,13 +48,13 @@ export function EditableServices({ services, selectedIds, onSave }: EditableServ
               setDraft(selectedIds);
               setIsEditing(true);
             }}
-            className="flex w-full flex-wrap gap-1.5 rounded px-1 -mx-1 py-1 text-left hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-netfive-red"
+            className="flex w-full flex-wrap gap-1.5 rounded px-1 -mx-1 py-1 text-left hover:bg-netfive-overlay/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-netfive-red"
           >
             {selectedServices.length === 0 && <span className="text-sm text-netfive-gray-500">—</span>}
             {selectedServices.map((service) => (
               <span
                 key={service.id}
-                className="rounded-full border border-netfive-border bg-white/5 px-2.5 py-1 text-xs text-netfive-gray-200"
+                className="rounded-full border border-netfive-border bg-netfive-overlay/5 px-2.5 py-1 text-xs text-netfive-gray-200"
               >
                 {service.name}
               </span>
