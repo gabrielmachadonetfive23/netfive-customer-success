@@ -39,3 +39,6 @@ scripts/import-report-*.json
 .vercel
 tsconfig.tsbuildinfo
 next-env.d.ts
+
+.vercel
+.env*
