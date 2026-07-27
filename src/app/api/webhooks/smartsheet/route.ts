@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import { getRow, verifyWebhookSignature } from "@/lib/integrations/smartsheet/client";
 import { smartsheetRowToFieldValues } from "@/lib/integrations/smartsheet/mapper";
 import { applyIncomingChange } from "@/lib/integrations/sync-orchestrator";
+import { prisma } from "@/lib/db";
 
 interface SmartsheetWebhookEvent {
   objectType: string;
@@ -20,6 +21,17 @@ interface SmartsheetWebhookPayload {
 // limite da função serverless (o processamento sequencial de N linhas escala
 // linearmente e pode ultrapassar o limite antes de terminar).
 export const maxDuration = 60;
+
+// Processar TODAS as linhas de um lote grande ao mesmo tempo pode esgotar o
+// limite de conexões do pooler do Postgres (cada linha faz várias idas ao
+// banco). Um lote de 5 por vez equilibra velocidade com o limite de conexões.
+const CONCURRENCY = 5;
+
+async function processInBatches<T>(items: T[], size: number, handler: (item: T) => Promise<void>): Promise<void> {
+  for (let i = 0; i < items.length; i += size) {
+    await Promise.all(items.slice(i, i + size).map(handler));
+  }
+}
 
 /**
  * Callback de eventos do Smartsheet. No cadastro do webhook, a Smartsheet envia
@@ -50,23 +62,27 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // precisamos processar cada linha uma vez.
   const uniqueRowIds = Array.from(new Set(rowEvents.map((event) => String(event.id))));
 
-  await Promise.all(
-    uniqueRowIds.map(async (rowId) => {
-      try {
-        const row = await getRow(rowId);
-        const values = await smartsheetRowToFieldValues(row);
-        await applyIncomingChange({
-          provider: "smartsheet",
-          externalId: String(row.id),
-          externalUpdatedAt: new Date(row.modifiedAt),
-          values,
-        });
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error("[webhook:smartsheet] falha ao processar evento de linha:", error);
-      }
-    }),
-  );
+  await processInBatches(uniqueRowIds, CONCURRENCY, async (rowId) => {
+    try {
+      const row = await getRow(rowId);
+      const values = await smartsheetRowToFieldValues(row);
+      await applyIncomingChange({
+        provider: "smartsheet",
+        externalId: String(row.id),
+        externalUpdatedAt: new Date(row.modifiedAt),
+        values,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      // eslint-disable-next-line no-console
+      console.error("[webhook:smartsheet] falha ao processar evento de linha:", rowId, message);
+      await prisma.syncLog
+        .create({
+          data: { provider: "smartsheet", direction: "pull", status: "error", message: `Linha ${rowId}: ${message}` },
+        })
+        .catch(() => {});
+    }
+  });
 
   return NextResponse.json({ received: true });
 }
