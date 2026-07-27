@@ -15,6 +15,12 @@ interface SmartsheetWebhookPayload {
   events?: SmartsheetWebhookEvent[];
 }
 
+// Edições em lote (ex.: colar uma coluna inteira) chegam num único callback com
+// dezenas de eventos de linha — processá-los em paralelo evita estourar o tempo
+// limite da função serverless (o processamento sequencial de N linhas escala
+// linearmente e pode ultrapassar o limite antes de terminar).
+export const maxDuration = 60;
+
 /**
  * Callback de eventos do Smartsheet. No cadastro do webhook, a Smartsheet envia
  * uma requisição de verificação com o header "Smartsheet-Hook-Challenge", que
@@ -39,22 +45,28 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const rowEvents = (payload.events ?? []).filter(
     (event) => event.objectType === "row" && (event.eventType === "created" || event.eventType === "updated"),
   );
+  // Uma mesma linha pode aparecer mais de uma vez no lote (uma edição por
+  // célula alterada) — como sempre buscamos a linha inteira via getRow, só
+  // precisamos processar cada linha uma vez.
+  const uniqueRowIds = Array.from(new Set(rowEvents.map((event) => String(event.id))));
 
-  for (const event of rowEvents) {
-    try {
-      const row = await getRow(String(event.id));
-      const values = await smartsheetRowToFieldValues(row);
-      await applyIncomingChange({
-        provider: "smartsheet",
-        externalId: String(row.id),
-        externalUpdatedAt: new Date(row.modifiedAt),
-        values,
-      });
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error("[webhook:smartsheet] falha ao processar evento de linha:", error);
-    }
-  }
+  await Promise.all(
+    uniqueRowIds.map(async (rowId) => {
+      try {
+        const row = await getRow(rowId);
+        const values = await smartsheetRowToFieldValues(row);
+        await applyIncomingChange({
+          provider: "smartsheet",
+          externalId: String(row.id),
+          externalUpdatedAt: new Date(row.modifiedAt),
+          values,
+        });
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error("[webhook:smartsheet] falha ao processar evento de linha:", error);
+      }
+    }),
+  );
 
   return NextResponse.json({ received: true });
 }
