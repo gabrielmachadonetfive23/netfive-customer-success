@@ -3,19 +3,25 @@ export function Pagination({
   pageSize,
   total,
   onPageChange,
+  leftSlot,
 }: {
   page: number;
   pageSize: number;
   total: number;
   onPageChange: (page: number) => void;
+  /** Conteúdo opcional (ex.: seletor de itens por página) exibido à esquerda da contagem. */
+  leftSlot?: React.ReactNode;
 }) {
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   return (
-    <div className="flex items-center justify-between px-4 py-3 text-sm text-netfive-gray-500">
-      <span>
-        {total === 0 ? "0 resultados" : `${(page - 1) * pageSize + 1}–${Math.min(page * pageSize, total)} de ${total}`}
-      </span>
+    <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm text-netfive-gray-500">
+      <div className="flex flex-wrap items-center gap-4">
+        {leftSlot}
+        <span>
+          {total === 0 ? "0 resultados" : `${(page - 1) * pageSize + 1}–${Math.min(page * pageSize, total)} de ${total}`}
+        </span>
+      </div>
       <div className="flex gap-2">
         <button
           type="button"

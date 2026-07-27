@@ -15,6 +15,7 @@ import { coveragePercentTone } from "@/lib/kpi-tone";
 import { KpiCard } from "@/components/ui/KpiCard";
 import { HEALTH_STATUS_TEXT_COLOR } from "@/components/customers/HealthScoreBar";
 import { Pagination } from "@/components/ui/Pagination";
+import { SortableHeader } from "@/components/ui/SortableHeader";
 import { TableEmptyState, TableErrorState, TableSkeleton } from "@/components/ui/TableStates";
 import { CsOwnerSelect, SearchInput, uniqueCsOwners } from "@/components/filters/FilterControls";
 import { SegmentBarChart } from "@/components/clients/SegmentBarChart";
@@ -23,6 +24,8 @@ import { PlusIcon } from "@/components/icons";
 import { formatCurrencyBRL, formatPercent } from "@/lib/format";
 import type { CustomerDTO, PaginatedResult } from "@/lib/types";
 
+type SortColumn = "companyName" | "csOwner" | "category" | "segment" | "healthScore" | "annualRevenue";
+
 export function ClientsClient() {
   const { openCustomer, openCreateCustomer } = useCustomerDrawer();
   const { version } = useDataRefresh();
@@ -30,8 +33,10 @@ export function ClientsClient() {
   const [searchInput, setSearchInput] = useState("");
   const search = useDebouncedValue(searchInput, 300);
   const [csOwner, setCsOwner] = useState("");
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(20);
   const [page, setPage] = useState(1);
+  const [sortBy, setSortBy] = useState<SortColumn>("companyName");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
   const filters = { search: search || undefined, csOwner: csOwner || undefined };
 
@@ -59,8 +64,8 @@ export function ClientsClient() {
     const params = new URLSearchParams();
     if (filters.search) params.set("search", filters.search);
     if (filters.csOwner) params.set("csOwner", filters.csOwner);
-    params.set("sortBy", "companyName");
-    params.set("sortDir", "asc");
+    params.set("sortBy", sortBy);
+    params.set("sortDir", sortDir);
     params.set("page", String(page));
     params.set("pageSize", String(pageSize));
 
@@ -79,7 +84,16 @@ export function ClientsClient() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, csOwner, pageSize, page, reloadToken, version]);
+  }, [search, csOwner, sortBy, sortDir, pageSize, page, reloadToken, version]);
+
+  function toggleSort(column: SortColumn) {
+    if (sortBy === column) {
+      setSortDir((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortBy(column);
+      setSortDir("asc");
+    }
+  }
 
   const columnCount = 8;
 
@@ -96,16 +110,6 @@ export function ClientsClient() {
       <div className="flex flex-wrap items-center gap-3">
         <SearchInput value={searchInput} onChange={setSearchInput} placeholder="Buscar empresa, serviço ou segmento..." />
         <CsOwnerSelect value={csOwner} onChange={setCsOwner} options={csOwnerOptions} />
-        <label className="flex items-center gap-2 text-xs text-netfive-gray-500">
-          Clientes por página
-          <select className="input-field w-auto" value={pageSize} onChange={(event) => setPageSize(Number(event.target.value))}>
-            {[10, 20, 50, 100].map((size) => (
-              <option key={size} value={size}>
-                {size}
-              </option>
-            ))}
-          </select>
-        </label>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -141,13 +145,23 @@ export function ClientsClient() {
         <table className="w-full min-w-[820px] text-sm">
           <thead>
             <tr>
-              {["Empresa", "Customer Success", "Categoria", "Segmento", "Serviços", "Health Score", `Faturamento FY${kpis.fiscalYear}`, "Ação"].map(
-                (label) => (
-                  <th key={label} scope="col" className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-netfive-gray-500">
-                    {label}
-                  </th>
-                ),
-              )}
+              <SortableHeader label="Empresa" active={sortBy === "companyName"} direction={sortDir} onClick={() => toggleSort("companyName")} />
+              <SortableHeader label="Customer Success" active={sortBy === "csOwner"} direction={sortDir} onClick={() => toggleSort("csOwner")} />
+              <SortableHeader label="Categoria" active={sortBy === "category"} direction={sortDir} onClick={() => toggleSort("category")} />
+              <SortableHeader label="Segmento" active={sortBy === "segment"} direction={sortDir} onClick={() => toggleSort("segment")} />
+              <th scope="col" className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-netfive-gray-500">
+                Serviços
+              </th>
+              <SortableHeader label="Health Score" active={sortBy === "healthScore"} direction={sortDir} onClick={() => toggleSort("healthScore")} />
+              <SortableHeader
+                label={`Faturamento FY${kpis.fiscalYear}`}
+                active={sortBy === "annualRevenue"}
+                direction={sortDir}
+                onClick={() => toggleSort("annualRevenue")}
+              />
+              <th scope="col" className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-netfive-gray-500">
+                Ação
+              </th>
             </tr>
           </thead>
 
@@ -204,7 +218,26 @@ export function ClientsClient() {
           )}
         </table>
 
-        {tableResult && <Pagination page={page} pageSize={pageSize} total={tableResult.total} onPageChange={setPage} />}
+        {tableResult && (
+          <Pagination
+            page={page}
+            pageSize={pageSize}
+            total={tableResult.total}
+            onPageChange={setPage}
+            leftSlot={
+              <label className="flex items-center gap-2 text-xs text-netfive-gray-500">
+                Clientes por página
+                <select className="input-field w-auto" value={pageSize} onChange={(event) => setPageSize(Number(event.target.value))}>
+                  {[10, 20, 50, 100].map((size) => (
+                    <option key={size} value={size}>
+                      {size}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            }
+          />
+        )}
       </div>
     </div>
   );

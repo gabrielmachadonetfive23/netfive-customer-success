@@ -103,7 +103,7 @@ export const customerListQuerySchema = z.object({
   category: z.enum(ALLOWED_CATEGORIES).optional(),
   healthStatus: z.enum(HEALTH_STATUSES).optional(),
   sortBy: z
-    .enum(["companyName", "csOwner", "category", "healthScore", "lastContact", "nextContact"])
+    .enum(["companyName", "csOwner", "category", "segment", "healthScore", "annualRevenue", "lastContact", "nextContact"])
     .optional(),
   sortDir: z.enum(["asc", "desc"]).optional(),
   page: z.coerce.number().int().min(1).default(1),
