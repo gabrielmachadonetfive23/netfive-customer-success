@@ -36,6 +36,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const payload = JSON.parse(rawBody) as SmartsheetWebhookPayload;
+  // eslint-disable-next-line no-console
+  console.log("[webhook:smartsheet] payload recebido:", JSON.stringify(payload));
   const rowEvents = (payload.events ?? []).filter(
     (event) => event.objectType === "row" && (event.eventType === "created" || event.eventType === "updated"),
   );
