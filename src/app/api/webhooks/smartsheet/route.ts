@@ -3,7 +3,6 @@ import type { NextRequest } from "next/server";
 import { getRow, verifyWebhookSignature } from "@/lib/integrations/smartsheet/client";
 import { smartsheetRowToFieldValues } from "@/lib/integrations/smartsheet/mapper";
 import { applyIncomingChange } from "@/lib/integrations/sync-orchestrator";
-import { prisma } from "@/lib/db";
 
 interface SmartsheetWebhookEvent {
   objectType: string;
@@ -37,16 +36,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const payload = JSON.parse(rawBody) as SmartsheetWebhookPayload;
-  await prisma.syncLog
-    .create({
-      data: {
-        provider: "smartsheet",
-        direction: "pull",
-        status: "skipped",
-        message: `DEBUG payload: ${JSON.stringify(payload).slice(0, 3000)}`,
-      },
-    })
-    .catch(() => {});
   const rowEvents = (payload.events ?? []).filter(
     (event) => event.objectType === "row" && (event.eventType === "created" || event.eventType === "updated"),
   );
