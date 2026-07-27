@@ -83,6 +83,12 @@ export async function searchOrganizationsByName(term: string): Promise<Pipedrive
   return (result?.items ?? []).map((i) => i.item);
 }
 
+/** URL da página da organização no app web do Pipedrive, para o link "Ir para o Pipedrive" na ficha do cliente. */
+export function getOrganizationUrl(organizationId: string): string {
+  const { domain } = getConfig();
+  return `https://${domain}.pipedrive.com/organization/${organizationId}`;
+}
+
 /** Verifica a autenticação Basic enviada pelo Pipedrive em cada chamada de webhook. */
 export function verifyWebhookBasicAuth(authorizationHeader: string | null): boolean {
   const secret = process.env.PIPEDRIVE_WEBHOOK_SECRET;
