@@ -77,6 +77,13 @@ export async function getRow(rowId: string): Promise<SmartsheetRow> {
   return smartsheetRequest<SmartsheetRow>(`/sheets/${sheetId}/rows/${rowId}`);
 }
 
+/** Todas as linhas da planilha configurada — usado na reconciliação periódica (ver /api/cron/sync). */
+export async function listSheetRows(): Promise<SmartsheetRow[]> {
+  const { sheetId } = getConfig();
+  const sheet = await smartsheetRequest<{ rows: SmartsheetRow[] }>(`/sheets/${sheetId}`);
+  return sheet.rows;
+}
+
 export async function createRow(cells: SmartsheetCell[]): Promise<SmartsheetRow> {
   const { sheetId } = getConfig();
   const result = await smartsheetRequest<{ result: SmartsheetRow[] }>(`/sheets/${sheetId}/rows`, {
