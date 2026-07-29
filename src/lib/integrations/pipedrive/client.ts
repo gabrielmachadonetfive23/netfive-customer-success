@@ -18,11 +18,21 @@ export interface PipedriveDeal {
   currency: string;
   add_time: string;
   close_time: string | null;
+  /** Pessoa de contato do negócio (stub embutido — o ID vem em `value`, não `id`; sem cargo, use getPerson para o registro completo). */
+  person_id: { value: number; name: string } | null;
 }
 
 export interface PipedriveOrgSearchResult {
   id: number;
   name: string;
+}
+
+export interface PipedrivePerson {
+  id: number;
+  name: string;
+  job_title: string | null;
+  email: { value: string; primary: boolean }[];
+  phone: { value: string; primary: boolean }[];
 }
 
 function getConfig() {
@@ -73,6 +83,11 @@ export async function listOrganizationDeals(organizationId: string): Promise<Pip
     `/organizations/${organizationId}/deals?status=all_not_deleted`,
   );
   return (deals ?? []).sort((a, b) => new Date(b.add_time).getTime() - new Date(a.add_time).getTime());
+}
+
+/** Registro completo de uma pessoa (nome, cargo, e-mails e telefones) — os negócios só trazem um resumo sem cargo. */
+export async function getPerson(personId: string): Promise<PipedrivePerson> {
+  return pipedriveRequest<PipedrivePerson>(`/persons/${personId}`);
 }
 
 /** Busca organizações por nome — usada para localizar uma organização já existente antes de criar uma nova. */
