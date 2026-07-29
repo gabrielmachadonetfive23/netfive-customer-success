@@ -83,3 +83,23 @@ export interface CustomerFilters {
   healthStatus?: HealthStatus;
   serviceIds?: string[];
 }
+
+export interface NewsArticleDTO {
+  id: string;
+  title: string;
+  summary: string | null;
+  url: string;
+  sourceName: string;
+  sourceDomain: string;
+  publishedAt: string; // ISO
+  category: "segmento" | "seguranca";
+  segments: string[];
+  tags: string[];
+  createdAt: string; // ISO
+}
+
+export interface NewsFilters {
+  search?: string;
+  category?: "segmento" | "seguranca";
+  segments?: string[];
+}

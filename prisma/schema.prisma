@@ -182,3 +182,26 @@ model SyncLog {
   @@index([customerId])
   @@index([createdAt])
 }
+
+// ---------------------------------------------------------------------------
+// Notícias — coletadas diariamente de fontes oficiais (RSS), filtradas por
+// relevância para os segmentos de clientes da Netfive e por segurança da
+// informação.
+// ---------------------------------------------------------------------------
+
+model NewsArticle {
+  id           String   @id @default(uuid())
+  title        String
+  summary      String?
+  url          String   @unique
+  sourceName   String
+  sourceDomain String
+  publishedAt  DateTime
+  category     String // "segmento" | "seguranca"
+  segments     String[] // segmentos de clientes relacionados (ex.: ["Agronegócio"]) — pode ser vazio em notícias de segurança gerais
+  tags         String[] // palavras-chave que geraram o match (ex.: ["investimento", "phishing"])
+  createdAt    DateTime @default(now())
+
+  @@index([category])
+  @@index([publishedAt])
+}

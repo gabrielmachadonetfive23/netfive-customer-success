@@ -258,6 +258,12 @@ git push -u origin main
 - [ ] Painel de sem-visita mostra "nunca" para quem nunca foi visitado.
 - [ ] Contatos planejados em atraso aparecem corretamente ordenados.
 
+### Notícias
+- [ ] Filtro por segmento (múltipla seleção) e por categoria (Financeiro & Tecnologia / Segurança) funcionam isolados e combinados.
+- [ ] Busca por texto filtra por título/resumo.
+- [ ] Clicar em uma notícia expande o resumo e o link "Ler notícia completa" (nova aba).
+- [ ] Coleta diária (`/api/cron/news`, GitHub Actions às 8h) só grava notícias novas (idempotente por URL).
+
 ### Ficha do cliente
 - [ ] Todas as seções exibem os dados corretos; campos vazios mostram "—".
 - [ ] Barra de Health Score reflete o valor e a cor do status.

@@ -154,6 +154,16 @@ export function MailIcon(props: IconProps) {
   );
 }
 
+export function NewsIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <rect x="3" y="4" width="15" height="16" rx="1.5" />
+      <path d="M18 8h1.5A1.5 1.5 0 0 1 21 9.5V18a2 2 0 0 1-2 2H7" />
+      <path d="M6.5 8h5M6.5 11.5h8M6.5 15h8" />
+    </svg>
+  );
+}
+
 export function WhatsAppIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>

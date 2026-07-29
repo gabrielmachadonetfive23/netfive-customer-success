@@ -1,0 +1,17 @@
+name: Coleta diária de notícias
+
+# 08:00 no horário de Brasília (UTC-3 fixo, sem horário de verão desde 2019)
+# equivale a 11:00 UTC.
+on:
+  schedule:
+    - cron: "0 11 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  news:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Chamar /api/cron/news
+        run: |
+          curl -sf -X GET "https://netfive-customer-success.vercel.app/api/cron/news" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
