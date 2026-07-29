@@ -101,6 +101,9 @@ function buildWhere(filters: CustomerFilters): Prisma.CustomerWhereInput {
   if (filters.csOwner) where.csOwner = filters.csOwner;
   if (filters.category) where.category = filters.category;
   if (filters.healthStatus) where.healthStatus = filters.healthStatus;
+  if (filters.serviceIds && filters.serviceIds.length > 0) {
+    where.services = { some: { serviceId: { in: filters.serviceIds } } };
+  }
 
   return where;
 }
@@ -123,6 +126,7 @@ export async function findCustomersPaginated(
     csOwner: query.csOwner,
     category: query.category,
     healthStatus: query.healthStatus,
+    serviceIds: query.serviceIds,
   });
 
   const sortBy = query.sortBy ?? "companyName";

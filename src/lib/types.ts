@@ -81,4 +81,5 @@ export interface CustomerFilters {
   csOwner?: string;
   category?: Category;
   healthStatus?: HealthStatus;
+  serviceIds?: string[];
 }

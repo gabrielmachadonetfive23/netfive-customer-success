@@ -11,6 +11,7 @@ function buildQuery(filters: CustomerFilters): string {
   if (filters.csOwner) params.set("csOwner", filters.csOwner);
   if (filters.category) params.set("category", filters.category);
   if (filters.healthStatus) params.set("healthStatus", filters.healthStatus);
+  if (filters.serviceIds && filters.serviceIds.length > 0) params.set("serviceIds", filters.serviceIds.join(","));
   return params.toString();
 }
 

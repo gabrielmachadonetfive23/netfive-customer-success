@@ -18,11 +18,12 @@ import { Pagination } from "@/components/ui/Pagination";
 import { SortableHeader } from "@/components/ui/SortableHeader";
 import { TableEmptyState, TableErrorState, TableSkeleton } from "@/components/ui/TableStates";
 import { CsOwnerSelect, SearchInput, uniqueCsOwners } from "@/components/filters/FilterControls";
+import { ServiceFilterSelect } from "@/components/filters/ServiceFilterSelect";
 import { SegmentBarChart } from "@/components/clients/SegmentBarChart";
 import { FinancialBarChart } from "@/components/clients/FinancialBarChart";
 import { PlusIcon } from "@/components/icons";
 import { formatCurrencyBRL, formatPercent } from "@/lib/format";
-import type { CustomerDTO, PaginatedResult } from "@/lib/types";
+import type { CustomerDTO, PaginatedResult, ServiceOption } from "@/lib/types";
 
 type SortColumn = "companyName" | "csOwner" | "category" | "segment" | "healthScore" | "annualRevenue";
 
@@ -33,12 +34,22 @@ export function ClientsClient() {
   const [searchInput, setSearchInput] = useState("");
   const search = useDebouncedValue(searchInput, 300);
   const [csOwner, setCsOwner] = useState("");
+  const [serviceIds, setServiceIds] = useState<string[]>([]);
   const [pageSize, setPageSize] = useState(20);
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState<SortColumn>("companyName");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [services, setServices] = useState<ServiceOption[]>([]);
 
-  const filters = { search: search || undefined, csOwner: csOwner || undefined };
+  useEffect(() => {
+    apiFetch<ServiceOption[]>("/api/services").then(setServices).catch(() => setServices([]));
+  }, []);
+
+  const filters = {
+    search: search || undefined,
+    csOwner: csOwner || undefined,
+    serviceIds: serviceIds.length > 0 ? serviceIds : undefined,
+  };
 
   const { customers: allCustomers } = useCustomerAnalytics({});
   const { customers: filteredCustomers } = useCustomerAnalytics(filters);
@@ -54,7 +65,7 @@ export function ClientsClient() {
   const [tableError, setTableError] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
 
-  useEffect(() => setPage(1), [search, csOwner, pageSize]);
+  useEffect(() => setPage(1), [search, csOwner, serviceIds, pageSize]);
 
   useEffect(() => {
     let cancelled = false;
@@ -64,6 +75,7 @@ export function ClientsClient() {
     const params = new URLSearchParams();
     if (filters.search) params.set("search", filters.search);
     if (filters.csOwner) params.set("csOwner", filters.csOwner);
+    if (filters.serviceIds) params.set("serviceIds", filters.serviceIds.join(","));
     params.set("sortBy", sortBy);
     params.set("sortDir", sortDir);
     params.set("page", String(page));
@@ -84,7 +96,7 @@ export function ClientsClient() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, csOwner, sortBy, sortDir, pageSize, page, reloadToken, version]);
+  }, [search, csOwner, serviceIds, sortBy, sortDir, pageSize, page, reloadToken, version]);
 
   function toggleSort(column: SortColumn) {
     if (sortBy === column) {
@@ -110,6 +122,7 @@ export function ClientsClient() {
       <div className="flex flex-wrap items-center gap-3">
         <SearchInput value={searchInput} onChange={setSearchInput} placeholder="Buscar empresa, serviço ou segmento..." />
         <CsOwnerSelect value={csOwner} onChange={setCsOwner} options={csOwnerOptions} />
+        <ServiceFilterSelect services={services} selectedIds={serviceIds} onChange={setServiceIds} />
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
