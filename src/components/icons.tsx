@@ -144,3 +144,21 @@ export function MoonIcon(props: IconProps) {
     </svg>
   );
 }
+
+export function MailIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="m4 6.5 8 6 8-6" />
+    </svg>
+  );
+}
+
+export function WhatsAppIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M6.2 17.8 3.5 20.5l.8-3.6A8 8 0 1 1 8.4 20L6.2 17.8Z" />
+      <path d="M8.5 8.7c.2-.5.5-.5.8-.5h.6c.2 0 .4 0 .6.4.2.5.6 1.5.7 1.6.1.1.1.3 0 .5-.1.2-.2.3-.3.5-.2.2-.3.3-.1.6.2.3.8 1.2 1.6 1.9 1.1 1 2 1.3 2.3 1.4.3.1.4.1.6-.1.2-.2.7-.8.9-1 .2-.2.4-.2.6-.1l1.5.7c.2.1.4.2.4.4.1.2.1 1-.2 1.4-.4.5-1.3 1-2.4.8-1-.1-2.9-.9-4.4-2.9-1.6-2.1-2.1-3.5-2.2-3.9-.1-.4-.4-1.4.1-2.4Z" />
+    </svg>
+  );
+}

@@ -3,7 +3,8 @@
 import { ALLOWED_CATEGORIES, HEALTH_STATUSES } from "@/lib/constants";
 import { apiFetch } from "@/lib/api-client";
 import { customerToApiPayload } from "@/lib/customer-payload";
-import { ExternalLinkIcon } from "@/components/icons";
+import { buildMailtoUrl, buildWhatsAppUrl, extractEmail, extractWhatsAppDigits } from "@/lib/contact-links";
+import { ExternalLinkIcon, MailIcon, WhatsAppIcon } from "@/components/icons";
 import { HealthScoreBar } from "@/components/customers/HealthScoreBar";
 import { EditableField } from "@/components/customers/EditableField";
 import { EditableServices } from "@/components/customers/EditableServices";
@@ -53,6 +54,9 @@ export function CustomerOverview({ customer, services, currentUserEmail, onUpdat
 
   const gridCols = columns === 3 ? "sm:grid-cols-2 lg:grid-cols-3" : "grid-cols-2";
 
+  const contactEmail = extractEmail(customer.contactInfo);
+  const whatsAppDigits = extractWhatsAppDigits(customer.contactInfo);
+
   return (
     <div className="space-y-6">
       <section>
@@ -71,6 +75,32 @@ export function CustomerOverview({ customer, services, currentUserEmail, onUpdat
           <EditableField label="Cargo" value={customer.contactRole} onSave={(v) => saveField("contactRole", v as string | undefined)} />
           <EditableField label="Telefone/e-mail" value={customer.contactInfo} onSave={(v) => saveField("contactInfo", v as string | undefined)} />
           <EditableField label="Responsável técnico" value={customer.technicalOwner} onSave={(v) => saveField("technicalOwner", v as string | undefined)} />
+        </dl>
+        {(contactEmail || whatsAppDigits) && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {contactEmail && (
+              <a
+                href={buildMailtoUrl(contactEmail)}
+                className="btn-secondary inline-flex items-center gap-1.5 px-3 py-1.5 text-xs"
+              >
+                <MailIcon className="h-3.5 w-3.5" />
+                Enviar e-mail
+              </a>
+            )}
+            {whatsAppDigits && (
+              <a
+                href={buildWhatsAppUrl(whatsAppDigits)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-secondary inline-flex items-center gap-1.5 px-3 py-1.5 text-xs"
+              >
+                <WhatsAppIcon className="h-3.5 w-3.5" />
+                Abrir WhatsApp
+              </a>
+            )}
+          </div>
+        )}
+        <dl className={`mt-3 grid gap-3 ${gridCols}`}>
           <EditableField label="Início do cliente" kind="date" value={customer.startDate} onSave={(v) => saveField("startDate", v as string | undefined)} />
           <EditableField label="Renovação" kind="date" value={customer.renewalDate} onSave={(v) => saveField("renewalDate", v as string | undefined)} />
           <EditableField label="Faturamento" kind="number" value={customer.annualRevenue} onSave={(v) => saveField("annualRevenue", v as number | null)} />
