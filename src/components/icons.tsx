@@ -154,6 +154,15 @@ export function MailIcon(props: IconProps) {
   );
 }
 
+export function ChecklistIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="m3.5 6 1.5 1.5L8 4.5M3.5 13l1.5 1.5L8 11.5M3.5 20l1.5 1.5L8 18.5" />
+      <path d="M11 6h9.5M11 13h9.5M11 20h9.5" />
+    </svg>
+  );
+}
+
 export function NewsIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>

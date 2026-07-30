@@ -205,3 +205,33 @@ model NewsArticle {
   @@index([category])
   @@index([publishedAt])
 }
+
+// ---------------------------------------------------------------------------
+// QBR/SBR — atividades abertas importadas do Notion (base "QBR/SBR -
+// Atividades Abertas - Segurança"), sincronizadas periodicamente.
+// ---------------------------------------------------------------------------
+
+model QbrActivity {
+  id           String    @id @default(uuid())
+  notionPageId String    @unique
+  notionUrl    String
+  activity     String // Atividade
+  cliente      String?
+  team         String? // Time (GRC | GRH | NGSOC | Engenharia SI | Red Team | Segurança)
+  responsavel  String?
+  status       String?
+  tipo         String? // QBR | SBR
+  quarter      String?
+  overdue      Boolean   @default(false) // Atrasada = Sim
+  agidesk      String?
+  dueDate      DateTime?
+  lastSyncedAt DateTime  @default(now())
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([cliente])
+  @@index([status])
+  @@index([team])
+  @@index([overdue])
+  @@index([dueDate])
+}

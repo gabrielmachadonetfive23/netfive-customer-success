@@ -264,6 +264,12 @@ git push -u origin main
 - [ ] Clicar em uma notícia expande o resumo e o link "Ler notícia completa" (nova aba).
 - [ ] Coleta diária (`/api/cron/news`, GitHub Actions às 8h) só grava notícias novas (idempotente por URL).
 
+### QBR/SBR
+- [ ] Grupos por cliente expandem/colapsam e mostram a contagem de atrasadas.
+- [ ] Filtros de Cliente, Equipe, Status e "Somente atrasadas" funcionam isolados e combinados.
+- [ ] Link "Notion" de cada atividade abre a página correta em nova aba.
+- [ ] Sincronização periódica (`/api/cron/qbr`) reflete atividades encerradas no Notion como removidas da lista.
+
 ### Ficha do cliente
 - [ ] Todas as seções exibem os dados corretos; campos vazios mostram "—".
 - [ ] Barra de Health Score reflete o valor e a cor do status.

@@ -103,3 +103,27 @@ export interface NewsFilters {
   category?: "segmento" | "seguranca";
   segments?: string[];
 }
+
+export interface QbrActivityDTO {
+  id: string;
+  notionUrl: string;
+  activity: string;
+  cliente: string | null;
+  team: string | null;
+  responsavel: string | null;
+  status: string | null;
+  tipo: string | null;
+  quarter: string | null;
+  overdue: boolean;
+  agidesk: string | null;
+  dueDate: string | null; // ISO
+  lastSyncedAt: string; // ISO
+}
+
+export interface QbrFilters {
+  search?: string;
+  clientes?: string[];
+  teams?: string[];
+  status?: string;
+  overdueOnly?: boolean;
+}

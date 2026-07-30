@@ -1,4 +1,4 @@
-name: Sincronização periódica (Smartsheet/Pipedrive)
+name: Sincronização periódica (Smartsheet/Pipedrive/Notion)
 
 # O plano Hobby da Vercel só permite Cron Jobs nativos 1x/dia, então
 # usamos o agendador do GitHub Actions (gratuito) para chamar a rota de
@@ -15,4 +15,8 @@ jobs:
       - name: Chamar /api/cron/sync
         run: |
           curl -sf -X GET "https://netfive-customer-success.vercel.app/api/cron/sync" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
+      - name: Chamar /api/cron/qbr
+        run: |
+          curl -sf -X GET "https://netfive-customer-success.vercel.app/api/cron/qbr" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
