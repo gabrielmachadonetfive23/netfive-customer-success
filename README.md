@@ -254,9 +254,10 @@ git push -u origin main
 
 ### Estatísticas
 - [ ] Filtro por CS recalcula todos os KPIs e painéis.
-- [ ] Painel de sem-contato mostra no máximo 10, ordenado por mais dias sem contato.
+- [ ] Painel de sem-contato mostra todos, ordenado por mais dias sem contato, com scroll interno após 10 linhas.
 - [ ] Painel de sem-visita mostra "nunca" para quem nunca foi visitado.
 - [ ] Contatos planejados em atraso aparecem corretamente ordenados.
+- [ ] Listas com mais de 10 linhas (sem contato, sem visita, renovações, atrasados) rolam dentro do próprio quadro, com cabeçalho fixo, sem crescer o layout da página.
 
 ### Notícias
 - [ ] Filtro por segmento (múltipla seleção) e por categoria (Financeiro & Tecnologia / Segurança) funcionam isolados e combinados.

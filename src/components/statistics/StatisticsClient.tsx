@@ -35,13 +35,16 @@ function PanelTable({
 }) {
   return (
     <div className="glass-panel p-4">
-      <h2 className="mb-3 text-sm font-semibold text-netfive-gray-100">{title}</h2>
+      <h2 className="mb-3 text-sm font-semibold text-netfive-gray-100">
+        {title}
+        {rows.length > 10 && <span className="ml-2 text-xs font-normal text-netfive-gray-500">({rows.length} no total)</span>}
+      </h2>
       {rows.length === 0 ? (
         <p className="py-4 text-center text-sm text-netfive-gray-500">{emptyMessage}</p>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="max-h-[410px] overflow-y-auto overflow-x-auto">
           <table className="w-full text-sm">
-            <thead>
+            <thead className="sticky top-0 z-10 bg-netfive-surface">
               <tr>
                 {headers.map((header) => (
                   <th key={header} className="px-2 py-2 text-left text-xs font-medium uppercase tracking-wide text-netfive-gray-500">

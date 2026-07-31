@@ -96,8 +96,8 @@ export function computeStatisticsKpis(customers: CustomerDTO[], now: Date): Stat
   };
 }
 
-/** Painel 1: até 10 clientes com maior número de dias sem contato (somente com contato registrado). */
-export function getTopNoContactCustomers(customers: CustomerDTO[], now: Date, limit = 10): NoContactEntry[] {
+/** Painel 1: clientes com mais de 20 dias sem contato (somente com contato registrado), do mais crítico ao menos. */
+export function getTopNoContactCustomers(customers: CustomerDTO[], now: Date): NoContactEntry[] {
   const today = startOfDay(now);
 
   return customers
@@ -109,8 +109,7 @@ export function getTopNoContactCustomers(customers: CustomerDTO[], now: Date, li
       lastContact: c.lastContact as string,
       daysWithoutContact: diffInDays(today, new Date(c.lastContact as string)),
     }))
-    .sort((a, b) => b.daysWithoutContact - a.daysWithoutContact)
-    .slice(0, limit);
+    .sort((a, b) => b.daysWithoutContact - a.daysWithoutContact);
 }
 
 /** Painel 2: clientes sem visita há mais de 60 dias, incluindo os nunca visitados ("nunca"), priorizando os mais críticos. */
