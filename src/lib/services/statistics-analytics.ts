@@ -40,6 +40,8 @@ export interface DistributionSlice {
   label: string;
   count: number;
   percent: number;
+  /** Empresas que compõem esta fatia — opcional, usado para tooltip de hover (ex.: serviços mais contratados). */
+  companies?: string[];
 }
 
 export interface HealthStatusSlice {
@@ -174,15 +176,22 @@ export function getDistributionByCategory(customers: CustomerDTO[]): Distributio
 
 /** Serviços mais contratados: quantos clientes têm cada serviço, do mais para o menos comum. */
 export function getServiceDistribution(customers: CustomerDTO[]): DistributionSlice[] {
-  const counts = new Map<string, number>();
+  const companiesByService = new Map<string, string[]>();
   for (const c of customers) {
     for (const service of c.services) {
-      counts.set(service.name, (counts.get(service.name) ?? 0) + 1);
+      const list = companiesByService.get(service.name) ?? [];
+      list.push(c.companyName);
+      companiesByService.set(service.name, list);
     }
   }
   const total = customers.length;
-  return Array.from(counts.entries())
-    .map(([label, count]) => ({ label, count, percent: total > 0 ? (count / total) * 100 : 0 }))
+  return Array.from(companiesByService.entries())
+    .map(([label, companies]) => ({
+      label,
+      count: companies.length,
+      percent: total > 0 ? (companies.length / total) * 100 : 0,
+      companies: [...companies].sort((a, b) => a.localeCompare(b)),
+    }))
     .sort((a, b) => b.count - a.count);
 }
 
