@@ -9,7 +9,7 @@ import { SESSION_COOKIE_NAME } from "@/lib/constants";
 // em src/app/(protected)/layout.tsx e em cada rota de API, via
 // requireSessionEmail(), que consulta o banco e retorna 401/redirect quando
 // a sessão é inválida ou expirou.
-const PROTECTED_PATH_PREFIXES = ["/dashboard", "/visitas", "/clientes", "/estatisticas", "/noticias", "/qbr"];
+const PROTECTED_PATH_PREFIXES = ["/dashboard", "/visitas", "/clientes", "/estatisticas", "/noticias", "/qbr", "/trocar-senha"];
 
 export function middleware(request: NextRequest): NextResponse {
   const { pathname } = request.nextUrl;
@@ -30,5 +30,13 @@ export function middleware(request: NextRequest): NextResponse {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/visitas/:path*", "/clientes/:path*", "/estatisticas/:path*", "/noticias/:path*", "/qbr/:path*"],
+  matcher: [
+    "/dashboard/:path*",
+    "/visitas/:path*",
+    "/clientes/:path*",
+    "/estatisticas/:path*",
+    "/noticias/:path*",
+    "/qbr/:path*",
+    "/trocar-senha/:path*",
+  ],
 };

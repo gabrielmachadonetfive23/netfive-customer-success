@@ -10,6 +10,7 @@ export function LoginForm() {
   const redirectTo = searchParams.get("redirectTo") ?? "/dashboard";
 
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -20,11 +21,11 @@ export function LoginForm() {
     setIsSubmitting(true);
     setError(null);
     try {
-      await apiFetch("/api/auth/login", {
+      const result = await apiFetch<{ email: string; mustChangePassword: boolean }>("/api/auth/login", {
         method: "POST",
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, password }),
       });
-      router.push(redirectTo);
+      router.push(result.mustChangePassword ? "/trocar-senha" : redirectTo);
       router.refresh();
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : "Não foi possível entrar.");
@@ -55,7 +56,20 @@ export function LoginForm() {
         required
       />
 
-      <button type="submit" className="btn-primary w-full" disabled={isSubmitting || !email}>
+      <label htmlFor="login-password" className="field-label">
+        Senha
+      </label>
+      <input
+        id="login-password"
+        type="password"
+        autoComplete="current-password"
+        className="input-field mb-4"
+        value={password}
+        onChange={(event) => setPassword(event.target.value)}
+        required
+      />
+
+      <button type="submit" className="btn-primary w-full" disabled={isSubmitting || !email || !password}>
         {isSubmitting ? "Entrando..." : "Entrar"}
       </button>
     </form>

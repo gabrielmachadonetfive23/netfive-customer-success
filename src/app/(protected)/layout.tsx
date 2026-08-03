@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getCurrentSessionEmail } from "@/lib/auth/session";
+import { prisma } from "@/lib/db";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { CustomerDrawerHost } from "@/components/customers/CustomerDrawerHost";
@@ -10,6 +11,11 @@ export default async function ProtectedLayout({ children }: { children: React.Re
   const email = await getCurrentSessionEmail();
   if (!email) {
     redirect("/login");
+  }
+
+  const user = await prisma.user.findUnique({ where: { email }, select: { mustChangePassword: true } });
+  if (user?.mustChangePassword) {
+    redirect("/trocar-senha");
   }
 
   return (

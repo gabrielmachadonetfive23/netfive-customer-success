@@ -22,7 +22,7 @@ export default async function LoginPage() {
             Netfive Customer Success
           </h1>
           <p className="mb-6 text-center text-sm text-netfive-gray-500">
-            Acesse com seu e-mail autorizado
+            Acesse com seu e-mail e senha
           </p>
           <LoginForm />
         </div>

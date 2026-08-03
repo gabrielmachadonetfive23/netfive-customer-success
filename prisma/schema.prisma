@@ -29,6 +29,25 @@ model UserSession {
   @@index([expiresAt])
 }
 
+model User {
+  id           String  @id @default(uuid())
+  email        String  @unique
+  passwordHash String
+  passwordSalt String
+
+  // Forçado no primeiro login (senha provisória) — controla o redirecionamento para /trocar-senha.
+  mustChangePassword Boolean @default(true)
+
+  // Bloqueio simples por tentativas de login incorretas (defesa contra força bruta).
+  failedLoginAttempts Int       @default(0)
+  lockedUntil         DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+}
+
 // ---------------------------------------------------------------------------
 // Domínio de Customer Success
 // ---------------------------------------------------------------------------

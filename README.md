@@ -47,7 +47,6 @@ Variáveis de ambiente (ver `.env.example`):
 |---|---|---|
 | `DATABASE_URL` | Sim | `file:./dev.db` (SQLite) por padrão; ou string de conexão PostgreSQL |
 | `AUTH_SECRET` | Sim | Segredo (≥16 caracteres) usado para derivar o hash do token de sessão |
-| `ALLOWED_EMAILS` | Sim | Lista de e-mails autorizados a acessar a plataforma, separados por vírgula |
 | `SMARTSHEET_API_TOKEN` / `SMARTSHEET_SHEET_ID` / `SMARTSHEET_WEBHOOK_SECRET` | Não | Necessárias apenas para ativar a sincronização com Smartsheet |
 | `PIPEDRIVE_API_TOKEN` / `PIPEDRIVE_DOMAIN` / `PIPEDRIVE_WEBHOOK_SECRET` | Não | Necessárias apenas para ativar a sincronização com Pipedrive |
 | `PUBLIC_APP_URL` | Não | URL pública usada ao registrar webhooks |
@@ -79,15 +78,22 @@ docker compose up -d
 
 ## Autenticação
 
-Login simplificado por lista de e-mails autorizados, **sem senha e sem código de verificação**:
+Login por **e-mail + senha**, com conta provisionada previamente (não há autocadastro):
 
-- O usuário digita o e-mail; se ele estiver em `ALLOWED_EMAILS`, a sessão é criada imediatamente.
+- Quem tem acesso é quem tem um registro na tabela `User` — não existe mais lista de e-mails por variável de ambiente.
+- Senhas são armazenadas como hash+salt via **scrypt** (nunca em texto plano); a verificação roda em tempo constante, inclusive quando o e-mail não existe (evita vazar por timing se uma conta existe ou não).
+- **Bloqueio por força bruta**: 5 tentativas incorretas seguidas bloqueiam a conta por 15 minutos.
+- **Senha provisória + troca obrigatória**: contas novas (`npm run user:create -- email@netfive.com.br`) nascem com `mustChangePassword=true` e uma senha aleatória impressa no terminal; no primeiro login a pessoa é redirecionada para `/trocar-senha` antes de acessar qualquer outra página.
 - Apenas o **hash** (HMAC-SHA256 com `AUTH_SECRET`) do token de sessão é armazenado — nunca o valor em claro.
 - Sessão válida por 48 horas, revogável via logout (remove o registro no banco).
 - Cookie de sessão: `HttpOnly`, `Secure`, `SameSite=Strict`.
 - Toda página protegida e toda rota de API validam a sessão no servidor; APIs retornam `401` quando a sessão é inválida/expirada.
 
-> **Trade-off de segurança**: como não há senha nem código, qualquer pessoa que souber (ou adivinhar) um e-mail da lista `ALLOWED_EMAILS` e tiver acesso à URL da plataforma consegue entrar. Isso foi uma escolha deliberada para simplificar o acesso da equipe — se em algum momento for necessário mais segurança, considere reintroduzir um segundo fator (código por e-mail, SSO corporativo, etc.).
+Para dar acesso a alguém novo (ou resetar a senha de alguém):
+
+```bash
+npm run user:create -- nome.sobrenome@netfive.com.br
+```
 
 ## Integrações (Smartsheet / Pipedrive)
 
@@ -194,7 +200,7 @@ git push -u origin main
 ### 3. Deploy (Vercel)
 
 1. Em [vercel.com/new](https://vercel.com/new), importe o repositório do GitHub.
-2. Em **Environment Variables**, adicione todas as variáveis obrigatórias (ver [Configuração](#configuração)): `DATABASE_URL`, `DIRECT_URL`, `AUTH_SECRET`, `ALLOWED_EMAILS`, e as de Smartsheet/Pipedrive se for usar.
+2. Em **Environment Variables**, adicione todas as variáveis obrigatórias (ver [Configuração](#configuração)): `DATABASE_URL`, `DIRECT_URL`, `AUTH_SECRET`, e as de Smartsheet/Pipedrive se for usar.
 3. Clique em **Deploy**. A Vercel builda e publica automaticamente (URL do tipo `netfive-cs.vercel.app`, ou configure um domínio próprio depois em **Settings → Domains**).
 4. A partir daí, todo `git push` para `main` gera um novo deploy automático.
 
@@ -202,16 +208,18 @@ git push -u origin main
 
 ### 4. Depois do primeiro deploy
 
-- Garanta que todos que precisam acessar estejam em `ALLOWED_EMAILS`.
+- Crie a conta de cada pessoa com `npm run user:create -- email@netfive.com.br` (roda contra o banco configurado em `DATABASE_URL`) e repasse a senha provisória impressa no terminal.
 - Se for usar Smartsheet/Pipedrive, registre os webhooks apontando para a URL final (`https://netfive-cs.vercel.app/api/webhooks/...`).
 - HTTPS já vem por padrão na Vercel — o cookie de sessão `Secure` funciona sem configuração extra.
 
 ## Checklist de segurança
 
-- [x] Login restrito à lista de e-mails em `ALLOWED_EMAILS`.
+- [x] Login por e-mail + senha; contas provisionadas via `npm run user:create` (sem autocadastro público).
+- [x] Senha armazenada como hash+salt (scrypt), verificação em tempo constante mesmo para e-mail inexistente.
+- [x] Bloqueio de conta após 5 tentativas incorretas (15 minutos).
+- [x] Senha provisória expira no primeiro uso — troca obrigatória via `/trocar-senha` antes de acessar qualquer página.
 - [x] Apenas o hash (HMAC-SHA256) do token de sessão é persistido — nunca o valor em claro.
 - [x] Cookie de sessão `HttpOnly`, `Secure`, `SameSite=Strict`; sessão expira em 48h.
-- [ ] **Risco aceito conscientemente**: não há senha nem segundo fator no login — qualquer um com um e-mail da lista e acesso à URL entra direto (ver [Autenticação](#autenticação)).
 - [x] Toda rota de API valida a sessão no servidor (`requireSessionEmail`) e retorna `401` quando inválida/expirada.
 - [x] Validação de payload com Zod em todas as rotas de escrita (client e servidor — nunca confia apenas na validação do navegador).
 - [x] Defesa em profundidade contra CSRF (checagem de origem em rotas de escrita, além do `SameSite=Strict`).
@@ -227,8 +235,10 @@ git push -u origin main
 ## Checklist manual de homologação
 
 ### Autenticação
-- [ ] Login com e-mail da lista `ALLOWED_EMAILS` entra direto, sem código.
-- [ ] Login com e-mail fora da lista é rejeitado com mensagem genérica.
+- [ ] Login com e-mail sem conta (ou senha errada) é rejeitado com mensagem genérica ("E-mail ou senha inválidos"), sem indicar qual dos dois está errado.
+- [ ] 5 tentativas erradas seguidas bloqueiam a conta por 15 minutos.
+- [ ] Login com senha provisória (`mustChangePassword=true`) redireciona para `/trocar-senha` antes de qualquer outra página.
+- [ ] `/trocar-senha` exige a senha atual correta, nova senha ≥8 caracteres e confirmação igual; após salvar, libera acesso normal.
 - [ ] Login redireciona para `/dashboard` (ou `redirectTo`) e a sessão persiste ao navegar entre páginas.
 - [ ] Logout invalida a sessão e acessar uma rota protegida depois redireciona para `/login`.
 - [ ] Após 48h, a sessão expira e a próxima ação exige novo login.
@@ -296,7 +306,7 @@ src/
     login/                 Página de login
   components/              Componentes de UI, organizados por domínio
   lib/
-    auth/                  Autenticação: lista de e-mails permitidos, sessão, criptografia
+    auth/                  Autenticação: senha (hash scrypt), sessão, criptografia
     api/                   Erros padronizados de API, checagem de origem
     repositories/          Acesso a dados via Prisma (única camada que fala com o banco)
     services/              Regras de negócio e cálculos (KPIs, ano fiscal, análises)
