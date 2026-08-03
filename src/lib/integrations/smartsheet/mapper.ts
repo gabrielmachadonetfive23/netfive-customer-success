@@ -1,7 +1,20 @@
 import { parse as parseCsvLine } from "csv-parse/sync";
 import type { CustomerDTO } from "@/lib/types";
+import { SERVICE_NAME_ALIASES } from "@/lib/constants";
 import { SMARTSHEET_SYNC_FIELDS } from "@/lib/integrations/field-mapping";
 import { getSheetColumns, type SmartsheetCell, type SmartsheetColumn, type SmartsheetRow } from "@/lib/integrations/smartsheet/client";
+
+/**
+ * O dropdown "Escopo Contratado" no Smartsheet guarda a opção com a grafia
+ * legada ("Monitoramento de Credencias Vazadas", sem o "i") — a plataforma
+ * normaliza para o nome correto ao importar (ver SERVICE_NAME_ALIASES), mas
+ * precisa reverter para a grafia legada ao empurrar de volta, senão o
+ * Smartsheet rejeita a célula com CELL_VALUE_FAILS_VALIDATION (o valor não
+ * bate com nenhuma opção do dropdown).
+ */
+const CANONICAL_TO_SMARTSHEET_SERVICE_NAME: Readonly<Record<string, string>> = Object.fromEntries(
+  Object.entries(SERVICE_NAME_ALIASES).map(([legacyName, canonicalName]) => [canonicalName, legacyName]),
+);
 
 /**
  * O Smartsheet junta valores de colunas de seleção múltipla em uma única
@@ -17,7 +30,7 @@ export function parseSmartsheetMultiValue(raw: string | number | null | undefine
 
 function toCellValues(customer: CustomerDTO, key: (typeof SMARTSHEET_SYNC_FIELDS)[number]["key"]): string[] {
   if (key === "services") {
-    return customer.services.map((s) => s.name);
+    return customer.services.map((s) => CANONICAL_TO_SMARTSHEET_SERVICE_NAME[s.name] ?? s.name);
   }
   const value = customer[key];
   if (value === null || value === undefined) return [];
