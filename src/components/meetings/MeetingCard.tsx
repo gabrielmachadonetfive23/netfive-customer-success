@@ -15,9 +15,15 @@ function formatDuration(startIso: string, endIso: string | null): string {
   return rest > 0 ? `${hours}h${rest}min` : `${hours}h`;
 }
 
+/**
+ * A documentação do Read.ai mostra essas métricas como fração 0-1, mas a API
+ * real retorna direto em escala 0-100 — trata os dois casos pra não depender
+ * de qual delas está certa (a API ainda está em beta aberta e pode mudar).
+ */
 function formatMetric(value: number | null): string | null {
   if (value === null) return null;
-  return `${Math.round(value * 100)}%`;
+  const percent = value <= 1 ? value * 100 : value;
+  return `${Math.round(percent)}%`;
 }
 
 export function MeetingCard({ meeting }: { meeting: MeetingDTO }) {
