@@ -19,7 +19,8 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "import:customers": "tsx scripts/import-customers.ts",
-    "user:create": "tsx scripts/create-user.ts"
+    "user:create": "tsx scripts/create-user.ts",
+    "readai:authorize": "tsx scripts/readai-authorize.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

@@ -10,6 +10,7 @@ Plataforma interna para centralizar a gestão da carteira de clientes de Custome
 - [Banco de dados](#banco-de-dados)
 - [Autenticação](#autenticação)
 - [Integrações (Smartsheet / Pipedrive)](#integrações-smartsheet--pipedrive)
+- [Reuniões (Read.ai)](#reuniões-readai)
 - [Desenvolvimento](#desenvolvimento)
 - [Importação de dados](#importação-de-dados)
 - [Build e produção](#build-e-produção)
@@ -131,6 +132,43 @@ Sem essas variáveis configuradas, a plataforma funciona normalmente — a sincr
 ### Fallback manual
 
 Cada ficha de cliente tem um botão **"Sincronizar agora"** que reenvia manualmente aquele cliente para os dois sistemas, útil caso a sincronização automática tenha falhado.
+
+## Reuniões (Read.ai)
+
+Sincronização **somente leitura** de reuniões (resumo, itens de ação, tópicos, participantes, métricas) — a API do Read.ai está em beta aberta e usa **OAuth 2.1** em vez de um token estático simples. O access token expira em 10 minutos e o refresh token é **de uso único** (roda a cada renovação), então o estado do token fica salvo na tabela `ReadAiOAuthToken` (uma única linha), não em variável de ambiente.
+
+### Configuração inicial (uma vez só)
+
+1. **Registrar o client OAuth** (não exige login, é só uma chamada de API):
+   ```bash
+   curl -X POST https://api.read.ai/oauth/register \
+     -H "Content-Type: application/json" \
+     -d '{
+       "client_name": "Netfive Customer Success Platform",
+       "redirect_uris": ["https://api.read.ai/oauth/ui"],
+       "grant_types": ["authorization_code", "refresh_token"],
+       "response_types": ["code"],
+       "scope": "openid email offline_access profile meeting:read mcp:execute",
+       "token_endpoint_auth_method": "client_secret_basic"
+     }'
+   ```
+   Salve `client_id` e `client_secret` da resposta em `READAI_CLIENT_ID`/`READAI_CLIENT_SECRET` no `.env` — o `client_secret` não pode ser recuperado depois.
+2. **Autorizar pelo navegador** (esta parte exige login na conta Read.ai de quem estiver configurando — não pode ser feita por script):
+   - Acesse [api.read.ai/oauth/ui](https://api.read.ai/oauth/ui), informe o `client_id`/`client_secret` do passo anterior e clique em **Start OAuth Flow**.
+   - Faça login na conta Read.ai (a conta precisa ter a opção **Downloads** habilitada em Workspace Settings > Reports & Sharing).
+   - Clique em **Allow Access** na tela de consentimento.
+   - Na tela final, clique em **Copy Command** — ele contém o `code` e o `code_verifier` (PKCE) necessários para o próximo passo.
+3. **Trocar o código por tokens**, extraindo `code`, `code_verifier` e `redirect_uri` do comando copiado:
+   ```bash
+   npm run readai:authorize -- "<code>" "<code_verifier>" "<redirect_uri>"
+   ```
+   Isso salva o primeiro par access/refresh token no banco. Dali em diante, a renovação é automática a cada sincronização.
+
+Sem `READAI_CLIENT_ID`/`READAI_CLIENT_SECRET` configurados, o cron pula a sincronização silenciosamente (visível no retorno de `/api/cron/readai`).
+
+### Se a cadeia de tokens quebrar
+
+O próprio Read.ai avisa que isso pode acontecer (refresh token de uso único). Se a sincronização passar a falhar com erro de autenticação, refaça só o **passo 2 e 3** acima (não precisa registrar um novo client).
 
 ## Desenvolvimento
 
@@ -287,6 +325,12 @@ git push -u origin main
 - [ ] Filtros de Cliente, Equipe, Status e "Somente atrasadas" funcionam isolados e combinados.
 - [ ] Link "Notion" de cada atividade abre a página correta em nova aba.
 - [ ] Sincronização periódica (`/api/cron/qbr`) reflete atividades encerradas no Notion como removidas da lista.
+
+### Reuniões
+- [ ] Busca por título/resumo/participante e filtro por plataforma funcionam isolados e combinados.
+- [ ] Clicar em uma reunião expande resumo, itens de ação, tópicos, participantes e métricas.
+- [ ] Link "Ver no Read.ai" abre o relatório correto em nova aba.
+- [ ] Sincronização periódica (`/api/cron/readai`) renova o access token automaticamente sem exigir novo login.
 
 ### Ficha do cliente
 - [ ] Todas as seções exibem os dados corretos; campos vazios mostram "—".

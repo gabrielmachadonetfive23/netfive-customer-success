@@ -271,3 +271,41 @@ model NpsResponse {
 
   @@index([companyName])
 }
+
+// ---------------------------------------------------------------------------
+// Reuniões — sincronizadas da API do Read.ai (OAuth 2.1, beta aberta). O
+// access token expira em 10min e o refresh token é de uso único (roda a
+// cada renovação), então guardamos o estado atual em uma única linha nesta
+// tabela em vez de variável de ambiente.
+// ---------------------------------------------------------------------------
+
+model ReadAiOAuthToken {
+  id           String   @id @default("current")
+  accessToken  String
+  refreshToken String
+  expiresAt    DateTime
+  updatedAt    DateTime @updatedAt
+}
+
+model Meeting {
+  id          String    @id @default(uuid())
+  readAiId    String    @unique // ULID do Read.ai
+  title       String
+  startTime   DateTime
+  endTime     DateTime?
+  platform    String? // zoom | google_meet | teams etc.
+  reportUrl   String?
+  summary     String?
+  actionItems Json? // formato bruto retornado pelo Read.ai (expand=action_items)
+  topics      Json? // formato bruto retornado pelo Read.ai (expand=topics)
+  participants Json? // [{ name, email, invited, attended }]
+  readScore   Float?
+  sentiment   Float?
+  engagement  Float?
+
+  lastSyncedAt DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([startTime])
+}

@@ -149,3 +149,26 @@ export interface NpsSummary {
   scoredCount: number;
   totalParticipants: number;
 }
+
+export interface MeetingParticipantDTO {
+  name: string;
+  email: string;
+  invited: boolean;
+  attended: boolean;
+}
+
+export interface MeetingDTO {
+  id: string;
+  title: string;
+  startTime: string; // ISO
+  endTime: string | null; // ISO
+  platform: string | null;
+  reportUrl: string | null;
+  summary: string | null;
+  actionItems: unknown;
+  topics: unknown;
+  participants: MeetingParticipantDTO[];
+  readScore: number | null;
+  sentiment: number | null;
+  engagement: number | null;
+}
