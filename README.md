@@ -275,6 +275,13 @@ git push -u origin main
 - [ ] Clicar em uma notícia expande o resumo e o link "Ler notícia completa" (nova aba).
 - [ ] Coleta diária (`/api/cron/news`, GitHub Actions às 8h) só grava notícias novas (idempotente por URL).
 
+### NPS
+- [ ] Adicionar empresa sem nota mostra "—" e não conta como promotor/neutro/detrator.
+- [ ] Nota 0-6 = Detrator, 7-8 = Neutro, 9-10 = Promotor; o escudo e os contadores refletem isso.
+- [ ] Editar uma resposta atualiza a categoria e o NPS geral corretamente.
+- [ ] Excluir remove a linha e recalcula o NPS geral.
+- [ ] Escudo anima de 0 até a nota ao carregar a página (ou instantâneo com `prefers-reduced-motion`).
+
 ### QBR/SBR
 - [ ] Grupos por cliente expandem/colapsam e mostram a contagem de atrasadas.
 - [ ] Filtros de Cliente, Equipe, Status e "Somente atrasadas" funcionam isolados e combinados.

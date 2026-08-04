@@ -254,3 +254,20 @@ model QbrActivity {
   @@index([overdue])
   @@index([dueDate])
 }
+
+// ---------------------------------------------------------------------------
+// NPS — respostas da pesquisa de satisfação, cadastradas manualmente (ainda
+// não há integração automática com a ferramenta de pesquisa).
+// ---------------------------------------------------------------------------
+
+model NpsResponse {
+  id          String    @id @default(uuid())
+  companyName String
+  score       Int? // 0-10; nulo = empresa participante sem nota lançada ainda
+  respondedAt DateTime?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([companyName])
+}

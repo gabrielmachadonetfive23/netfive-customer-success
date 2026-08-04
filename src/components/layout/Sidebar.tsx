@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { NetfiveLogo } from "@/components/brand/NetfiveLogo";
-import { CalendarIcon, ChartIcon, ChecklistIcon, LogoutIcon, NewsIcon, OverviewIcon, UsersIcon } from "@/components/icons";
+import { CalendarIcon, ChartIcon, ChecklistIcon, LogoutIcon, NewsIcon, OverviewIcon, ShieldIcon, UsersIcon } from "@/components/icons";
 import { apiFetch } from "@/lib/api-client";
 
 const NAV_ITEMS = [
@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { href: "/clientes", label: "Clientes", icon: UsersIcon },
   { href: "/estatisticas", label: "Estatísticas", icon: ChartIcon },
   { href: "/noticias", label: "Notícias", icon: NewsIcon },
+  { href: "/nps", label: "NPS", icon: ShieldIcon },
   { href: "/qbr", label: "QBR/SBR", icon: ChecklistIcon },
 ];
 

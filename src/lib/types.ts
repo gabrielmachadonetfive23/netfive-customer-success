@@ -127,3 +127,25 @@ export interface QbrFilters {
   status?: string;
   overdueOnly?: boolean;
 }
+
+export type NpsCategory = "Promotor" | "Neutro" | "Detrator";
+
+export interface NpsResponseDTO {
+  id: string;
+  companyName: string;
+  score: number | null;
+  category: NpsCategory | null;
+  respondedAt: string | null; // ISO
+  notes: string | null;
+  createdAt: string; // ISO
+  updatedAt: string; // ISO
+}
+
+export interface NpsSummary {
+  score: number | null; // -100..100, null quando não há respostas com nota
+  promoters: number;
+  passives: number;
+  detractors: number;
+  scoredCount: number;
+  totalParticipants: number;
+}
