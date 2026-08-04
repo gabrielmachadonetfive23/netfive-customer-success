@@ -23,14 +23,17 @@ export async function GET(): Promise<NextResponse> {
           prisma.syncLog.findFirst({ where: { provider, status: "error" }, orderBy: { createdAt: "desc" } }),
         ]);
 
+        // Só mostra a falha se ela for mais recente que o último sucesso — senão
+        // um erro antigo já superado por uma sincronização bem-sucedida depois
+        // ficaria exibido como problema atual pra sempre.
+        const isUnresolved = lastError && (!lastLog || lastError.createdAt > lastLog.createdAt);
+
         return {
           provider,
           configured,
           linkedCustomers: linkedCount,
           lastSuccessAt: lastLog?.createdAt.toISOString() ?? null,
-          lastError: lastError
-            ? { message: lastError.message, at: lastError.createdAt.toISOString() }
-            : null,
+          lastError: isUnresolved ? { message: lastError.message, at: lastError.createdAt.toISOString() } : null,
         };
       }),
     );
