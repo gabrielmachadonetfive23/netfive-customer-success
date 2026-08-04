@@ -164,6 +164,7 @@ export interface MeetingDTO {
   endTime: string | null; // ISO
   platform: string | null;
   reportUrl: string | null;
+  ownerName: string | null;
   summary: string | null;
   actionItems: unknown;
   topics: unknown;

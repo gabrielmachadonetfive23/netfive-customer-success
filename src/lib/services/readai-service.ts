@@ -24,6 +24,8 @@ function toMeetingData(meeting: ReadAiMeeting) {
     endTime: meeting.end_time_ms ? new Date(meeting.end_time_ms) : null,
     platform: meeting.platform,
     reportUrl: meeting.report_url,
+    ownerEmail: meeting.owner?.email ?? null,
+    ownerName: meeting.owner?.name ?? null,
     summary: meeting.summary ?? null,
     actionItems: (meeting.action_items ?? Prisma.JsonNull) as Prisma.InputJsonValue,
     topics: (meeting.topics ?? Prisma.JsonNull) as Prisma.InputJsonValue,

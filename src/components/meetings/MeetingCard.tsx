@@ -53,6 +53,7 @@ export function MeetingCard({ meeting }: { meeting: MeetingDTO }) {
           <h3 className="font-medium text-netfive-gray-100">{meeting.title}</h3>
           <p className="text-xs text-netfive-gray-500">
             {formatDateTime(meeting.startTime)} · {attendedCount} participante{attendedCount !== 1 ? "s" : ""}
+            {meeting.ownerName && ` · organizada por ${meeting.ownerName}`}
           </p>
         </div>
         <ChevronUpDownIcon className={`h-4 w-4 shrink-0 text-netfive-gray-500 transition-transform ${expanded ? "rotate-180" : ""}`} />

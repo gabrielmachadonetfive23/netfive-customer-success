@@ -96,6 +96,12 @@ Para dar acesso a alguém novo (ou resetar a senha de alguém):
 npm run user:create -- nome.sobrenome@netfive.com.br
 ```
 
+Para marcar/desmarcar alguém como **admin** (acesso total a dados restritos por CS — hoje, a lista completa de [Reuniões](#reuniões-readai); sem mexer na senha):
+
+```bash
+npm run user:set-admin -- nome.sobrenome@netfive.com.br true
+```
+
 ## Integrações (Smartsheet / Pipedrive)
 
 A plataforma sincroniza clientes em **duas vias** com Smartsheet e Pipedrive: alterações feitas na plataforma são enviadas para os dois sistemas, e alterações feitas neles chegam de volta via webhook.
@@ -136,6 +142,8 @@ Cada ficha de cliente tem um botão **"Sincronizar agora"** que reenvia manualme
 ## Reuniões (Read.ai)
 
 Sincronização **somente leitura** de reuniões (resumo, itens de ação, tópicos, participantes, métricas) — a API do Read.ai está em beta aberta e usa **OAuth 2.1** em vez de um token estático simples. O access token expira em 10 minutos e o refresh token é **de uso único** (roda a cada renovação), então o estado do token fica salvo na tabela `ReadAiOAuthToken` (uma única linha), não em variável de ambiente.
+
+**Visibilidade por CS**: cada usuário só vê as reuniões que organizou (`ownerEmail`, o organizador reportado pelo Read.ai) ou das quais participou (presente em `participants`) — o e-mail é casado com o e-mail de login (`User.email`). Só quem tem `User.isAdmin = true` (ver [Autenticação](#autenticação)) vê a lista completa, sem esse filtro.
 
 ### Configuração inicial (uma vez só)
 
@@ -331,6 +339,8 @@ git push -u origin main
 - [ ] Clicar em uma reunião expande resumo, itens de ação, tópicos, participantes e métricas.
 - [ ] Link "Ver no Read.ai" abre o relatório correto em nova aba.
 - [ ] Sincronização periódica (`/api/cron/readai`) renova o access token automaticamente sem exigir novo login.
+- [ ] Um CS sem `isAdmin` só vê reuniões que organizou ou das quais participou — nunca as de outro CS sem relação com ele.
+- [ ] Usuário com `isAdmin=true` (hoje, só `relacionamento@netfive.com.br`) vê a lista completa, sem filtro.
 
 ### Ficha do cliente
 - [ ] Todas as seções exibem os dados corretos; campos vazios mostram "—".

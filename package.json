@@ -20,6 +20,7 @@
     "db:studio": "prisma studio",
     "import:customers": "tsx scripts/import-customers.ts",
     "user:create": "tsx scripts/create-user.ts",
+    "user:set-admin": "tsx scripts/set-admin.ts",
     "readai:authorize": "tsx scripts/readai-authorize.ts"
   },
   "prisma": {
