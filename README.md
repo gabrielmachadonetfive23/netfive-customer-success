@@ -181,7 +181,18 @@ O próprio Read.ai avisa que isso pode acontecer (refresh token de uso único). 
 
 ## Alfred (assistente de IA)
 
-"Dicas do Alfred" é o retângulo em destaque acima dos KPIs da Visão geral. É **100% baseado em regras** (`src/lib/services/alfred-tips.ts`), sem chamada a nenhuma IA nem custo de API: gera alertas a partir dos mesmos cálculos usados em Estatísticas (contatos em atraso, renovação em até 90 dias, mais de 20 dias sem contato, saúde crítica, mais de 60 dias sem visita), ordena do mais urgente ao menos e revezar automaticamente entre eles. Clicar num alerta abre a ficha do cliente.
+"Dicas do Alfred" é o retângulo em destaque presente em **todos os módulos** da plataforma (Visão geral, Visitas, Clientes, Estatísticas, Notícias, NPS, QBR/SBR e Reuniões) — cada um mostra dicas focadas nos dados daquela própria página, não um alerta genérico repetido. É **100% baseado em regras** (`src/lib/services/alfred-tips.ts`, uma função `generate*Tips` por módulo), sem chamada a nenhuma IA nem custo de API. O componente de exibição (`src/components/alfred/AlfredBanner.tsx`) é genérico: revezar automaticamente entre as dicas, ordenadas da mais urgente à menos, e cada módulo decide como reagir ao clique — abrir a ficha do cliente (quando a dica tem `customerId`) ou abrir um link em nova aba (quando tem `url`, como a notícia, a atividade no Notion ou o relatório da reunião).
+
+| Módulo | Do que vêm as dicas |
+| --- | --- |
+| Visão geral | Contatos em atraso, renovação em até 90 dias, saúde crítica, sem contato/visita há muito tempo — visão geral da carteira |
+| Visitas | Visita hoje ou nos próximos 7 dias, visita com data vencida sem atualização, clientes sem visita há muito tempo |
+| Clientes | Segmento não informado, faturamento divulgado sem fonte verificada |
+| Estatísticas | O caso mais crítico de cada painel da página (maior atraso, renovação mais próxima, concentração de saúde crítica por CS) |
+| Notícias | Alertas de segurança recentes, segmento mais coberto na lista atual |
+| NPS | Respostas Detrator pedindo atenção, empresas sem nota lançada |
+| QBR/SBR | Atividades atrasadas, com link direto para a página no Notion |
+| Reuniões | Reuniões com engajamento ou sentimento baixo, com link direto para o relatório no Read.ai |
 
 ## Desenvolvimento
 
@@ -300,8 +311,6 @@ git push -u origin main
 - [ ] Alternar "KPIs acompanham os filtros" recalcula os KPIs.
 - [ ] Ordenação por coluna e paginação funcionam.
 - [ ] Estados de carregamento, vazio e erro (com nova tentativa) aparecem corretamente.
-- [ ] "Dicas do Alfred" aparece acima dos KPIs, revezando entre os alertas a cada alguns segundos; sem alertas, mostra "Tudo em dia".
-- [ ] Clicar num alerta do Alfred abre a ficha do cliente correspondente.
 
 ### Visitas
 - [ ] Somente visitas a partir de hoje aparecem, ordenadas da mais próxima.
@@ -348,6 +357,11 @@ git push -u origin main
 - [ ] Sincronização periódica (`/api/cron/readai`) renova o access token automaticamente sem exigir novo login.
 - [ ] Um CS sem `isAdmin` só vê reuniões que organizou ou das quais participou — nunca as de outro CS sem relação com ele.
 - [ ] Usuário com `isAdmin=true` (hoje, só `relacionamento@netfive.com.br`) vê a lista completa, sem filtro.
+
+### Alfred
+- [ ] O card "Dicas do Alfred" aparece em todos os 8 módulos, revezando entre os alertas a cada alguns segundos; sem alertas, mostra "Tudo em dia".
+- [ ] As dicas de cada módulo são específicas dele (ex.: Visitas mostra visitas atrasadas/próximas, não os mesmos alertas de contato da Visão geral).
+- [ ] Clicar numa dica com cliente associado abre a ficha correspondente; clicar numa dica de notícia/QBR/reunião abre o link em nova aba.
 
 ### Ficha do cliente
 - [ ] Todas as seções exibem os dados corretos; campos vazios mostram "—".

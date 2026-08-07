@@ -11,8 +11,10 @@ import {
   computeFinancialBarData,
   computeSegmentDistribution,
 } from "@/lib/services/clients-analytics";
+import { generateClientTips } from "@/lib/services/alfred-tips";
 import { coveragePercentTone } from "@/lib/kpi-tone";
 import { KpiCard } from "@/components/ui/KpiCard";
+import { AlfredBanner, openAlfredTip } from "@/components/alfred/AlfredBanner";
 import { HEALTH_STATUS_TEXT_COLOR } from "@/components/customers/HealthScoreBar";
 import { Pagination } from "@/components/ui/Pagination";
 import { SortableHeader } from "@/components/ui/SortableHeader";
@@ -59,6 +61,7 @@ export function ClientsClient() {
   const segments = computeSegmentDistribution(filteredCustomers);
   const financialData = computeFinancialBarData(filteredCustomers, now);
   const csOwnerOptions = uniqueCsOwners(allCustomers);
+  const alfredTips = useMemo(() => generateClientTips(filteredCustomers, now), [filteredCustomers, now]);
 
   const [tableResult, setTableResult] = useState<PaginatedResult<CustomerDTO> | null>(null);
   const [isLoadingTable, setIsLoadingTable] = useState(true);
@@ -124,6 +127,8 @@ export function ClientsClient() {
         <CsOwnerSelect value={csOwner} onChange={setCsOwner} options={csOwnerOptions} />
         <ServiceFilterSelect services={services} selectedIds={serviceIds} onChange={setServiceIds} />
       </div>
+
+      <AlfredBanner tips={alfredTips} onSelectTip={(tip) => openAlfredTip(tip, openCustomer)} />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <KpiCard label="Total de clientes" value={kpis.totalCustomers} />

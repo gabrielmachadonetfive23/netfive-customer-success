@@ -4,7 +4,9 @@ import { useMemo, useState } from "react";
 import { useCustomerAnalytics } from "@/lib/hooks/useCustomerAnalytics";
 import { useCustomerDrawer } from "@/lib/hooks/useCustomerDrawer";
 import { computeVisitsKpis, getUpcomingVisits } from "@/lib/services/visits-analytics";
+import { generateVisitTips } from "@/lib/services/alfred-tips";
 import { KpiCard } from "@/components/ui/KpiCard";
+import { AlfredBanner, openAlfredTip } from "@/components/alfred/AlfredBanner";
 import { CsOwnerSelect, uniqueCsOwners } from "@/components/filters/FilterControls";
 
 const MONTH_LABELS = [
@@ -33,6 +35,7 @@ export function VisitsClient() {
   const kpis = computeVisitsKpis(customers, now);
   const visits = getUpcomingVisits(customers, now);
   const csOwnerOptions = uniqueCsOwners(allCustomers);
+  const alfredTips = useMemo(() => generateVisitTips(customers, now), [customers, now]);
 
   return (
     <div className="space-y-6">
@@ -40,6 +43,8 @@ export function VisitsClient() {
         <h1 className="text-xl font-semibold text-netfive-gray-100">Visitas</h1>
         <CsOwnerSelect value={csOwner} onChange={setCsOwner} options={csOwnerOptions} />
       </div>
+
+      <AlfredBanner tips={alfredTips} onSelectTip={(tip) => openAlfredTip(tip, openCustomer)} />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard label="Visitas agendadas" value={kpis.scheduledVisits} />

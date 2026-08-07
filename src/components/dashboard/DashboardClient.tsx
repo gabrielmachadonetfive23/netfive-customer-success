@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { apiFetch } from "@/lib/api-client";
 import { useCustomerAnalytics } from "@/lib/hooks/useCustomerAnalytics";
 import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
@@ -9,7 +9,8 @@ import { useDataRefresh } from "@/lib/contexts/DataRefreshContext";
 import { computeDashboardKpis } from "@/lib/services/dashboard-analytics";
 import { coveragePercentTone } from "@/lib/kpi-tone";
 import { KpiCard } from "@/components/ui/KpiCard";
-import { AlfredTips } from "@/components/dashboard/AlfredTips";
+import { AlfredBanner, openAlfredTip } from "@/components/alfred/AlfredBanner";
+import { generateDashboardTips } from "@/lib/services/alfred-tips";
 import { HEALTH_STATUS_TEXT_COLOR } from "@/components/customers/HealthScoreBar";
 import { SortableHeader } from "@/components/ui/SortableHeader";
 import { Pagination } from "@/components/ui/Pagination";
@@ -59,6 +60,7 @@ export function DashboardClient() {
   const kpiSource = kpiFollowsFilters ? filteredCustomers : allCustomers;
   const kpis = computeDashboardKpis(kpiSource, new Date());
   const csOwnerOptions = uniqueCsOwners(allCustomers);
+  const alfredTips = useMemo(() => generateDashboardTips(allCustomers, new Date()), [allCustomers]);
 
   const [tableResult, setTableResult] = useState<PaginatedResult<CustomerDTO> | null>(null);
   const [isLoadingTable, setIsLoadingTable] = useState(true);
@@ -148,7 +150,7 @@ export function DashboardClient() {
         </p>
       )}
 
-      <AlfredTips customers={allCustomers} />
+      <AlfredBanner tips={alfredTips} onSelectTip={(tip) => openAlfredTip(tip, openCustomer)} />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <KpiCard label="Clientes na base" value={kpis.totalCustomers} />

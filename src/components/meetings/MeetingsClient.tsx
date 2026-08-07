@@ -3,8 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { apiFetch } from "@/lib/api-client";
 import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
+import { generateMeetingTips } from "@/lib/services/alfred-tips";
 import { SearchInput } from "@/components/filters/FilterControls";
 import { MeetingCard } from "@/components/meetings/MeetingCard";
+import { AlfredBanner, openAlfredTip } from "@/components/alfred/AlfredBanner";
 import type { MeetingDTO } from "@/lib/types";
 
 export function MeetingsClient() {
@@ -44,6 +46,8 @@ export function MeetingsClient() {
     });
   }, [meetings, search, platform]);
 
+  const alfredTips = useMemo(() => generateMeetingTips(filtered), [filtered]);
+
   return (
     <div className="space-y-6">
       <div>
@@ -64,6 +68,8 @@ export function MeetingsClient() {
           </select>
         )}
       </div>
+
+      <AlfredBanner tips={alfredTips} onSelectTip={(tip) => openAlfredTip(tip)} />
 
       {error && <div className="glass-card p-4 text-sm text-netfive-red">{error}</div>}
 

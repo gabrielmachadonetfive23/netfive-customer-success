@@ -15,8 +15,10 @@ import {
   getTopNoContactCustomers,
   getUpcomingRenewals,
 } from "@/lib/services/statistics-analytics";
+import { generateStatisticsTips } from "@/lib/services/alfred-tips";
 import { riskCountTone } from "@/lib/kpi-tone";
 import { KpiCard } from "@/components/ui/KpiCard";
+import { AlfredBanner, openAlfredTip } from "@/components/alfred/AlfredBanner";
 import { CsOwnerSelect, uniqueCsOwners } from "@/components/filters/FilterControls";
 import { DistributionBarChart } from "@/components/statistics/DistributionBarChart";
 import { HealthStatusBarChart } from "@/components/statistics/HealthStatusBarChart";
@@ -97,6 +99,7 @@ export function StatisticsClient() {
   const serviceStats = getServiceStats(customers);
   const byHealthStatus = getHealthStatusDistribution(customers);
   const upcomingRenewals = getUpcomingRenewals(customers, now);
+  const alfredTips = useMemo(() => generateStatisticsTips(customers, now), [customers, now]);
 
   return (
     <div className="space-y-6">
@@ -115,6 +118,8 @@ export function StatisticsClient() {
         </div>
       ) : (
         <>
+          <AlfredBanner tips={alfredTips} onSelectTip={(tip) => openAlfredTip(tip, openCustomer)} />
+
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <KpiCard
               label="Sem contato há mais de 20 dias"

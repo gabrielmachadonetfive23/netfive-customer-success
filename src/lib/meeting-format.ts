@@ -1,4 +1,13 @@
 /**
+ * O Read.ai já retornou essas métricas tanto como fração (0-1) quanto como
+ * porcentagem (0-100) dependendo da reunião — normaliza para 0-100 sempre.
+ */
+export function normalizeMetricPercent(value: number | null): number | null {
+  if (value === null) return null;
+  return value <= 1 ? value * 100 : value;
+}
+
+/**
  * `action_items` e `topics` vêm do Read.ai em formato ainda não documentado
  * publicamente (a API está em beta aberta) — pode ser uma lista de strings ou
  * de objetos com campos como `text`/`title`/`description`. Essa função tenta

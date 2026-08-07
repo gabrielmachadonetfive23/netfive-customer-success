@@ -1,10 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useCustomerDrawer } from "@/lib/hooks/useCustomerDrawer";
-import { generateAlfredTips, type AlfredTipSeverity } from "@/lib/services/alfred-tips";
+import { useEffect, useState } from "react";
 import { AlfredIcon } from "@/components/icons";
-import type { CustomerDTO } from "@/lib/types";
+import type { AlfredTip, AlfredTipSeverity } from "@/lib/services/alfred-tips";
 
 const ROTATE_MS = 7000;
 const MAX_DOTS = 8;
@@ -15,13 +13,28 @@ const SEVERITY_DOT_COLOR: Record<AlfredTipSeverity, string> = {
   info: "bg-netfive-gray-500",
 };
 
-interface AlfredTipsProps {
-  customers: CustomerDTO[];
+/** Comportamento padrão de clique: abre a ficha do cliente (se houver essa ação disponível), ou o link em nova aba. */
+export function openAlfredTip(tip: AlfredTip, openCustomer?: (customerId: string) => void): void {
+  if (tip.customerId && openCustomer) {
+    openCustomer(tip.customerId);
+  } else if (tip.url) {
+    window.open(tip.url, "_blank", "noopener,noreferrer");
+  }
 }
 
-export function AlfredTips({ customers }: AlfredTipsProps) {
-  const { openCustomer } = useCustomerDrawer();
-  const tips = useMemo(() => generateAlfredTips(customers, new Date()), [customers]);
+interface AlfredBannerProps {
+  tips: AlfredTip[];
+  /** Chamado ao clicar numa dica com customerId ou url — decide o que abrir. */
+  onSelectTip?: (tip: AlfredTip) => void;
+  emptyMessage?: string;
+}
+
+/**
+ * Banner genérico de "Dicas do Alfred" — cada módulo da plataforma gera seu
+ * próprio conjunto de dicas (via alfred-tips.ts) e passa aqui só pra exibir e
+ * revezar. Sem chamada a LLM: puramente derivado dos dados já carregados.
+ */
+export function AlfredBanner({ tips, onSelectTip, emptyMessage = "Tudo em dia por aqui — nenhum alerta no momento." }: AlfredBannerProps) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
 
@@ -36,6 +49,7 @@ export function AlfredTips({ customers }: AlfredTipsProps) {
   }, [paused, tips.length]);
 
   const tip = tips[index] ?? null;
+  const isClickable = Boolean(tip && onSelectTip && (tip.customerId || tip.url));
 
   return (
     <div
@@ -56,19 +70,23 @@ export function AlfredTips({ customers }: AlfredTipsProps) {
           {tip ? (
             <div className="mt-0.5 flex items-center gap-2">
               <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${SEVERITY_DOT_COLOR[tip.severity]}`} aria-hidden />
-              <button
-                type="button"
-                onClick={() => openCustomer(tip.customerId)}
-                className="min-w-0 truncate text-left text-sm font-medium text-netfive-gray-100 hover:underline"
-                title={tip.message}
-              >
-                {tip.message}
-              </button>
+              {isClickable ? (
+                <button
+                  type="button"
+                  onClick={() => onSelectTip?.(tip)}
+                  className="min-w-0 truncate text-left text-sm font-medium text-netfive-gray-100 hover:underline"
+                  title={tip.message}
+                >
+                  {tip.message}
+                </button>
+              ) : (
+                <p className="min-w-0 truncate text-sm font-medium text-netfive-gray-100" title={tip.message}>
+                  {tip.message}
+                </p>
+              )}
             </div>
           ) : (
-            <p className="mt-0.5 text-sm font-medium text-netfive-gray-100">
-              Tudo em dia por aqui — nenhum alerta no momento.
-            </p>
+            <p className="mt-0.5 text-sm font-medium text-netfive-gray-100">{emptyMessage}</p>
           )}
         </div>
 

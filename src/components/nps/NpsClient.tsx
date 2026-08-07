@@ -3,10 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { apiFetch, ApiClientError } from "@/lib/api-client";
 import { computeNpsSummary } from "@/lib/services/nps-analytics";
+import { generateNpsTips } from "@/lib/services/alfred-tips";
 import { npsCategoryBadgeTone } from "@/lib/nps-tone";
 import { formatDate } from "@/lib/format";
 import { NpsShield } from "@/components/nps/NpsShield";
 import { NpsResponseForm } from "@/components/nps/NpsResponseForm";
+import { AlfredBanner, openAlfredTip } from "@/components/alfred/AlfredBanner";
 import { TrashIcon } from "@/components/icons";
 import type { NpsResponseDTO } from "@/lib/types";
 
@@ -31,6 +33,7 @@ export function NpsClient() {
   }
 
   const summary = useMemo(() => computeNpsSummary(responses ?? []), [responses]);
+  const alfredTips = useMemo(() => generateNpsTips(responses ?? []), [responses]);
 
   function handleSaved(saved: NpsResponseDTO) {
     setResponses((prev) => {
@@ -62,6 +65,8 @@ export function NpsClient() {
         <h1 className="text-xl font-semibold text-netfive-gray-100">NPS</h1>
         <p className="text-sm text-netfive-gray-500">Pesquisa de satisfação — cadastro manual das empresas participantes.</p>
       </div>
+
+      <AlfredBanner tips={alfredTips} onSelectTip={(tip) => openAlfredTip(tip)} />
 
       {error && <div className="glass-card p-4 text-sm text-netfive-red">{error}</div>}
 

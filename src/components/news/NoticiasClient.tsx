@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { apiFetch } from "@/lib/api-client";
 import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
 import { KNOWN_NEWS_SEGMENTS } from "@/lib/services/news-classification";
+import { generateNewsTips } from "@/lib/services/alfred-tips";
 import { SearchInput } from "@/components/filters/FilterControls";
 import { SegmentFilterSelect } from "@/components/news/SegmentFilterSelect";
 import { NewsCard } from "@/components/news/NewsCard";
+import { AlfredBanner, openAlfredTip } from "@/components/alfred/AlfredBanner";
 import { Pagination } from "@/components/ui/Pagination";
 import type { NewsArticleDTO, PaginatedResult } from "@/lib/types";
 
@@ -60,6 +62,8 @@ export function NoticiasClient() {
     };
   }, [search, category, segments, page]);
 
+  const alfredTips = useMemo(() => generateNewsTips(result?.items ?? []), [result]);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -91,6 +95,8 @@ export function NoticiasClient() {
           ))}
         </div>
       </div>
+
+      <AlfredBanner tips={alfredTips} onSelectTip={(tip) => openAlfredTip(tip)} />
 
       {error && <div className="glass-card p-4 text-sm text-netfive-red">{error}</div>}
 

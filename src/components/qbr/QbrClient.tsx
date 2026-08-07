@@ -4,7 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import { apiFetch } from "@/lib/api-client";
 import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
 import { qbrStatusBadgeTone, qbrStatusTextTone } from "@/lib/qbr-tone";
+import { generateQbrTips } from "@/lib/services/alfred-tips";
 import { KpiCard } from "@/components/ui/KpiCard";
+import { AlfredBanner, openAlfredTip } from "@/components/alfred/AlfredBanner";
 import { SearchInput } from "@/components/filters/FilterControls";
 import { QbrMultiSelect } from "@/components/qbr/QbrMultiSelect";
 import { ChevronUpDownIcon, ExternalLinkIcon } from "@/components/icons";
@@ -75,6 +77,8 @@ export function QbrClient() {
     };
   }, [activities]);
 
+  const alfredTips = useMemo(() => generateQbrTips(activities ?? []), [activities]);
+
   const groups = useMemo(() => {
     const map = new Map<string, QbrActivityDTO[]>();
     for (const activity of activities ?? []) {
@@ -103,6 +107,8 @@ export function QbrClient() {
           Atividades em aberto importadas do Notion, agrupadas por cliente — sincronizado periodicamente.
         </p>
       </div>
+
+      <AlfredBanner tips={alfredTips} onSelectTip={(tip) => openAlfredTip(tip)} />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard label="Atividades em aberto" value={kpis.total} />
