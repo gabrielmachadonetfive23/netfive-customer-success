@@ -12,15 +12,46 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
+      # continue-on-error em cada chamada: as três integrações são
+      # independentes, então uma falhar (ex.: Smartsheet fora do ar) não pode
+      # impedir as outras de rodar. --max-time evita que uma chamada travada
+      # (bem acima do maxDuration=60s de cada rota) prenda o job inteiro. Sem
+      # "-f", o corpo da resposta sempre aparece no log — inclusive em erro —
+      # em vez de ser engolido, que era o que impedia diagnosticar as falhas.
       - name: Chamar /api/cron/sync
+        id: sync
+        continue-on-error: true
         run: |
-          curl -sf -X GET "https://netfive-customer-success.vercel.app/api/cron/sync" \
-            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
+          status=$(curl -s --max-time 90 -o response.txt -w "%{http_code}" -X GET \
+            "https://netfive-customer-success.vercel.app/api/cron/sync" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}")
+          cat response.txt
+          echo "HTTP $status"
+          [ "$status" = "200" ]
       - name: Chamar /api/cron/qbr
+        id: qbr
+        continue-on-error: true
         run: |
-          curl -sf -X GET "https://netfive-customer-success.vercel.app/api/cron/qbr" \
-            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
+          status=$(curl -s --max-time 90 -o response.txt -w "%{http_code}" -X GET \
+            "https://netfive-customer-success.vercel.app/api/cron/qbr" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}")
+          cat response.txt
+          echo "HTTP $status"
+          [ "$status" = "200" ]
       - name: Chamar /api/cron/readai
+        id: readai
+        continue-on-error: true
         run: |
-          curl -sf -X GET "https://netfive-customer-success.vercel.app/api/cron/readai" \
-            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
+          status=$(curl -s --max-time 90 -o response.txt -w "%{http_code}" -X GET \
+            "https://netfive-customer-success.vercel.app/api/cron/readai" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}")
+          cat response.txt
+          echo "HTTP $status"
+          [ "$status" = "200" ]
+      # Sem isso, os continue-on-error acima fariam o job aparecer sempre
+      # verde no Actions mesmo quando uma sincronização falhou de verdade.
+      - name: Marcar o job como falho se alguma chamada deu erro
+        if: steps.sync.outcome == 'failure' || steps.qbr.outcome == 'failure' || steps.readai.outcome == 'failure'
+        run: |
+          echo "sync=${{ steps.sync.outcome }} qbr=${{ steps.qbr.outcome }} readai=${{ steps.readai.outcome }}"
+          exit 1
