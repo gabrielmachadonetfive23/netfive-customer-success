@@ -181,23 +181,7 @@ O próprio Read.ai avisa que isso pode acontecer (refresh token de uso único). 
 
 ## Alfred (assistente de IA)
 
-Tem duas partes independentes, uma delas não precisa de nenhuma configuração extra:
-
-**"Dicas do Alfred"** — o retângulo em destaque acima dos KPIs da Visão geral. É **100% baseado em regras** (`src/lib/services/alfred-tips.ts`), sem chamada a nenhuma IA: gera alertas a partir dos mesmos cálculos usados em Estatísticas (contatos em atraso, renovação em até 90 dias, mais de 20 dias sem contato, saúde crítica, mais de 60 dias sem visita), ordena do mais urgente ao menos e revezar automaticamente entre eles. Clicar num alerta abre a ficha do cliente. Funciona sempre, mesmo sem `ANTHROPIC_API_KEY`.
-
-**Chat do Alfred** — o botão flutuante no canto inferior direito, em qualquer página. É um chat com IA (Claude, via API da Anthropic) com acesso **somente leitura** à base — ele consulta clientes, saúde da carteira, NPS, QBR/SBR e reuniões através de *tool calling* (`src/lib/services/alfred-tools.ts`) para responder com dados reais, nunca inventados. Reuniões respeitam a mesma visibilidade por CS da aba [Reuniões](#reuniões-readai).
-
-### Configuração
-
-1. Gere uma chave em [console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys).
-2. Defina `ANTHROPIC_API_KEY` no `.env` (e na Vercel, em produção). Opcionalmente, `ANTHROPIC_MODEL` para trocar o modelo (padrão `claude-sonnet-5`).
-
-Sem a chave configurada, o chat responde educadamente que ainda não está disponível — nenhuma outra funcionalidade da plataforma é afetada.
-
-### Limitações conhecidas
-
-- O histórico da conversa vive só no navegador (state do React) — recarregar a página reinicia o chat.
-- Cada resposta do Alfred custa uma chamada à API da Anthropic (cobrada por token) — não há cache nem limite de uso configurado além do limite de 6 idas e vindas de ferramentas por pergunta.
+"Dicas do Alfred" é o retângulo em destaque acima dos KPIs da Visão geral. É **100% baseado em regras** (`src/lib/services/alfred-tips.ts`), sem chamada a nenhuma IA nem custo de API: gera alertas a partir dos mesmos cálculos usados em Estatísticas (contatos em atraso, renovação em até 90 dias, mais de 20 dias sem contato, saúde crítica, mais de 60 dias sem visita), ordena do mais urgente ao menos e revezar automaticamente entre eles. Clicar num alerta abre a ficha do cliente.
 
 ## Desenvolvimento
 
@@ -364,12 +348,6 @@ git push -u origin main
 - [ ] Sincronização periódica (`/api/cron/readai`) renova o access token automaticamente sem exigir novo login.
 - [ ] Um CS sem `isAdmin` só vê reuniões que organizou ou das quais participou — nunca as de outro CS sem relação com ele.
 - [ ] Usuário com `isAdmin=true` (hoje, só `relacionamento@netfive.com.br`) vê a lista completa, sem filtro.
-
-### Alfred
-- [ ] Botão flutuante aparece no canto inferior direito em todas as páginas protegidas; clique abre/fecha o chat.
-- [ ] Sem `ANTHROPIC_API_KEY` configurada, enviar uma mensagem retorna o aviso de "ainda não configurado", sem quebrar a UI.
-- [ ] Com a chave configurada, perguntas sobre clientes/NPS/QBR/reuniões retornam dados reais (nunca inventados).
-- [ ] Um CS sem `isAdmin` perguntando sobre reuniões só recebe as que organizou ou das quais participou.
 
 ### Ficha do cliente
 - [ ] Todas as seções exibem os dados corretos; campos vazios mostram "—".
