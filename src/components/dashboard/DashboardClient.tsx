@@ -9,6 +9,7 @@ import { useDataRefresh } from "@/lib/contexts/DataRefreshContext";
 import { computeDashboardKpis } from "@/lib/services/dashboard-analytics";
 import { coveragePercentTone } from "@/lib/kpi-tone";
 import { KpiCard } from "@/components/ui/KpiCard";
+import { AlfredTips } from "@/components/dashboard/AlfredTips";
 import { HEALTH_STATUS_TEXT_COLOR } from "@/components/customers/HealthScoreBar";
 import { SortableHeader } from "@/components/ui/SortableHeader";
 import { Pagination } from "@/components/ui/Pagination";
@@ -146,6 +147,8 @@ export function DashboardClient() {
           Os indicadores abaixo representam toda a carteira. Os filtros afetam apenas a tabela.
         </p>
       )}
+
+      <AlfredTips customers={allCustomers} />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <KpiCard label="Clientes na base" value={kpis.totalCustomers} />

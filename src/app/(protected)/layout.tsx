@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { CustomerDrawerHost } from "@/components/customers/CustomerDrawerHost";
+import { AlfredChatWidget } from "@/components/alfred/AlfredChatWidget";
 import { DataRefreshProvider } from "@/lib/contexts/DataRefreshContext";
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
@@ -31,6 +32,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
         <Suspense fallback={null}>
           <CustomerDrawerHost currentUserEmail={email} />
         </Suspense>
+        <AlfredChatWidget />
       </div>
     </DataRefreshProvider>
   );
